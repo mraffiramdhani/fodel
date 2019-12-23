@@ -3,7 +3,7 @@ require('dotenv').config()
 const express = require('express'),
     cors = require('cors'),
     bodyParser = require('body-parser'),
-    // { auth } = require('./src/middleware'),
+    { auth } = require('./src/middleware'),
     port = process.env.APP_PORT;
 
 // assign express instance to app variable
