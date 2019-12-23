@@ -21,4 +21,4 @@ const auth = (req, res, next) => {
     }
 }
 
-module.exports = { auth, isAdmin }
+module.exports = { auth }
