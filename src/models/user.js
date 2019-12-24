@@ -23,8 +23,32 @@ User.getAllUser = (result) => {
     })
 }
 
-User.getUserById = (userId, result) => {
-    conn.query('select * from users where id=?', userId, (err, res, fields) => {
+User.getUserById = (id, result) => {
+    conn.query('select * from users where id=?', id, (err, res, fields) => {
+        if (err) {
+            console.log('error: ', err)
+            result(null, err)
+        } else {
+            console.log('users:', res)
+            result(null, res)
+        }
+    })
+}
+
+User.getUserByUsername = (username, result) => {
+    conn.query('select * from users where username=?', username, (err, res, fields) => {
+        if (err) {
+            console.log('error: ', err)
+            result(null, err)
+        } else {
+            console.log('users:', res)
+            result(null, res)
+        }
+    })
+}
+
+User.getUserByRole = (role_id, result) => {
+    conn.query('select * from users where role_id=?', role_id, (req, res) => {
         if (err) {
             console.log('error: ', err)
             result(null, err)
@@ -52,7 +76,7 @@ User.createUser = (newUser, result) => {
         })
 }
 
-User.updateById = (id, user, result) => {
+User.updateUser = (id, user, result) => {
     conn.query('update users set name=?, username=?, password=?, role_id=?, updated_at=? where id=?',
         [id, user],
         (req, res) => {

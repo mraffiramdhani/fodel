@@ -15,12 +15,6 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 app.use(cors())
 
-// define app routes
-// app.use('/user', user)
-// app.get('/', (req, res) => {
-//     res.send('Hello World')
-// });
-
 // define app port
 app.listen(port, () => {
     console.log('App Listen on Port ' + port)

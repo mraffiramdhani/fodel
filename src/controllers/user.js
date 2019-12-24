@@ -2,6 +2,7 @@
 
 var User = require('../models/user')
 const jwt = require('jsonwebtoken'),
+    bcrypt = require('bcryptjs'),
     RevToken = require('../models/revoked_token');
 
 module.exports.list_all_users = (req, res) => {
@@ -55,4 +56,69 @@ module.exports.register_user = (req, res) => {
             }
         })
     }
+}
+
+module.exports.login_user = (req, res) => {
+    const { username, password } = req.body
+
+    if (!username || !password) {
+        res.status(400).send({
+            error: true,
+            message: "Please provide a valid data"
+        })
+    } else {
+        User.getUserByUsername(username, (err, result) => {
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else if (result.length > 0) {
+                console.log('User Controller login user - username verified')
+                if (bcrypt.compareSync(password, result[0].password)) {
+                    console.log('User Controller login user - password verified')
+                    const { name, role_id } = result[0]
+                    const token = jwt.sign({ name, username, role_id }, process.env.APP_KEY)
+                    var put_token = new RevToken({ token })
+                    RevToken.putToken(put_token, (err, result) => {
+                        if (err) {
+                            res.send(err)
+                            console.log('error', err)
+                            console.log('res', result)
+                        } else {
+                            res.send({
+                                success: true,
+                                result,
+                                token
+                            })
+                        }
+                    })
+                } else {
+
+                }
+            } else {
+                res.send({
+                    success: false,
+                    message: 'User not found.'
+                })
+            }
+        })
+    }
+}
+
+module.exports.logout_user = (req, res) => {
+    RevToken.revokeToken(req.token,
+        (err, result, fields) => {
+            if (err) {
+                res.send({
+                    success: false,
+                    message: err
+                })
+            } else {
+                res.send({
+                    success: true,
+                    message: "User Logged Out Successfuly"
+                })
+            }
+        }
+    )
 }

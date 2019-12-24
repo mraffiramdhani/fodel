@@ -10,8 +10,14 @@ module.exports = (app) => {
     app.route('/register')
         .post(Users.register_user)
 
+    app.route('/login')
+        .post(Users.login_user)
+
     app.route('/user')
         .get(auth, Users.list_all_users)
+
+    app.route('/logout')
+        .get(auth, Users.logout_user)
 
     // app.route('/user/register')
     //     .post(Users.createUser)
