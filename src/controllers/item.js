@@ -3,19 +3,25 @@
 var Item = require('../models/item')
 
 module.exports.list_all_item = (req, res) => {
-    Item.getAllItem((err, result, fields) => {
-        console.log('Item Controller Item index')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
-    })
+    const { search, sort } = req.query
+    console.log('search: ' + search + ' - sort: ' + sort)
+    if (search == '' && sort == '') {
+        Item.getAllItem((err, result, fields) => {
+            console.log('Item Controller Item index')
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
+    } else {
+        res.send(search)
+    }
 }
 
 module.exports.create_item = (req, res) => {
