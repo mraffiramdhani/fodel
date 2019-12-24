@@ -77,8 +77,10 @@ User.createUser = (newUser, result) => {
 }
 
 User.updateUser = (id, user, result) => {
+    const { name, username, password, role_id, updated_at } = user
+    const encPass = bcrypt.hashSync(password)
     conn.query('update users set name=?, username=?, password=?, role_id=?, updated_at=? where id=?',
-        [id, user],
+        [name, username, encPass, role_id, updated_at, id],
         (req, res) => {
             if (err) {
                 console.log('error: ', err)

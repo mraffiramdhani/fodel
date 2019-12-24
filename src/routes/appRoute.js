@@ -1,9 +1,12 @@
 'use strict'
 module.exports = (app) => {
-    const Users = require('../controllers/user')
+    const Users = require('../controllers/user'),
+        Categories = require('../controllers/category'),
+        Restaurants = require('../controllers/restaurant'),
+        Items = require('../controllers/item');
     const { auth } = require('../middleware')
 
-    app.route('/').get(auth, (req, res) => {
+    app.route('/').get((req, res) => {
         res.send('Hello World')
     })
 
@@ -18,6 +21,30 @@ module.exports = (app) => {
 
     app.route('/logout')
         .get(auth, Users.logout_user)
+
+    app.route('/category')
+        .get(auth, Categories.list_all_category)
+        .post(auth, Categories.create_category)
+
+    app.route('/category/:id')
+        .patch(auth, Categories.update_category)
+        .delete(auth, Categories.delete_category)
+
+    app.route('/restaurant')
+        .get(auth, Restaurants.list_all_restaurant)
+        .post(auth, Restaurants.create_restaurant)
+
+    app.route('/restaurant/:id')
+        .patch(auth, Restaurants.update_restaurant)
+        .delete(auth, Restaurants.delete_restaurant)
+
+    app.route('/item')
+        .get(auth, Items.list_all_item)
+        .post(auth, Items.create_item)
+
+    app.route('/item/:id')
+        .patch(auth, Items.update_item)
+        .delete(auth, Items.delete_item)
 
     // app.route('/user/register')
     //     .post(Users.createUser)

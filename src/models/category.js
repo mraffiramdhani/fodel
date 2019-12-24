@@ -30,8 +30,9 @@ Category.createCategory = (newCat, result) => {
     })
 }
 
-Category.updateCategory = (id, cat_name, result) => {
-    conn.query('update categories set name=? where id=?', [id, cat_name], (err, res, fields) => {
+Category.updateCategory = (id, updCat, result) => {
+    const { name } = updCat
+    conn.query('update categories set name=? where id=?', [name, id], (err, res, fields) => {
         if (err) {
             console.log('error: ', err)
             result(null, err)
@@ -43,7 +44,7 @@ Category.updateCategory = (id, cat_name, result) => {
 }
 
 Category.deleteCategory = (id, result) => {
-    conn.query('delete from category where id=?', id, (req, res) => {
+    conn.query('delete from categories where id=?', id, (err, res, fields) => {
         if (err) {
             console.log('error: ', err)
             result(null, err)

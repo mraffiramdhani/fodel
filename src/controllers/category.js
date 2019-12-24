@@ -44,8 +44,8 @@ module.exports.create_category = (req, res) => {
 }
 
 module.exports.update_category = (req, res) => {
-    const cat_id = req.params.id
-    Category.updateCategory(cat_id, req.body.name, (err, result, fields) => {
+    const { id } = req.params
+    Category.updateCategory(id, new Category(req.body), (err, result, fields) => {
         console.log('Category Controller update category')
         if (err) {
             res.send(err)
@@ -61,9 +61,9 @@ module.exports.update_category = (req, res) => {
 }
 
 module.exports.delete_category = (req, res) => {
-    const cat_id = req.params.id
+    const id = req.params.id
     Category.deleteCategory(id, (err, result, fields) => {
-        console.log('Category Controller update category')
+        console.log('Category Controller delete category')
         if (err) {
             res.send(err)
             console.log('error', err)
