@@ -8,6 +8,12 @@ module.exports = {
       database: 'fodel',
       user: 'admin',
       password: ''
+    },
+    migrations: {
+      directory: __dirname + '/database/migrations',
+    },
+    seeds: {
+      directory: __dirname + '/database/seeds'
     }
   },
 
