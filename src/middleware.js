@@ -20,7 +20,8 @@ const auth = (req, res, next) => {
                 } else {
                     try {
                         const auth_data = jwt.verify(jwt_token, process.env.APP_KEY)
-                        req.auth = auth_data
+                        // req.auth = auth_data
+                        req.headers['auth_token'] = auth_data
                         next()
                     } catch (e) {
                         res.send({
@@ -41,7 +42,7 @@ const auth = (req, res, next) => {
 
 const hasRole = function HasRole(roles) {
     return (req, res, next) => {
-        const { role_id } = req.auth
+        const { role_id } = req.headers['auth_token']
         conn.execute('select * from roles where id=?', [role_id], (err, result) => {
             if (err) {
                 res.send({

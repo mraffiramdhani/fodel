@@ -6,7 +6,6 @@ var Cart = function Cart(cart) {
     this.item_id = cart.item_id
     this.quantity = cart.quantity
     this.description = cart.description
-    this.user_id = cart.user_id
     this.created_at = new Date()
     this.updated_at = new Date()
 }

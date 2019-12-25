@@ -1,45 +1,11 @@
 'use strict'
 
-var Cart = require('../models/cart')
+var Review = require('../models/review')
 
-module.exports.list_user_cart = (req, res) => {
-    const { id } = req.headers['auth_token']
-    Cart.getCartByUserId(id, (err, result) => {
-        console.log('Cart Controller Cart index')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
-    })
-}
-
-module.exports.add_item_to_cart = (req, res) => {
-    const { id } = req.headers['auth_token']
-    Cart.addItemtoCart(id, new Cart(req.body), (err, result) => {
-        console.log('Cart Controller add item to user cart')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
-    })
-}
-
-module.exports.update_item_in_cart = (req, res) => {
+module.exports.list_item_review = (req, res) => {
     const { id } = req.params
-    Cart.updateIteminCart(id, new Cart(req.body), (err, result) => {
-        console.log('Cart Controller update item in user cart')
+    Review.getItemReview(id, (err, result) => {
+        console.log('Review Controller item review index')
         if (err) {
             res.send(err)
             console.log('error', err)
@@ -53,10 +19,61 @@ module.exports.update_item_in_cart = (req, res) => {
     })
 }
 
-module.exports.delete_item_in_cart = (req, res) => {
+module.exports.list_user_review = (req, res) => {
+    const { id } = req.headers['auth_token']
+    Review.getUserReview(id, (err, result) => {
+        console.log('Review Controller user review index')
+        if (err) {
+            res.send(err)
+            console.log('error', err)
+            console.log('res', result)
+        } else {
+            res.send({
+                success: true,
+                result
+            })
+        }
+    })
+}
+
+module.exports.add_item_review = (req, res) => {
+    const { id } = req.headers['auth_token']
+    Review.createItemReview(id, new Review(req.body), (err, result) => {
+        console.log('Review Controller add review to item')
+        if (err) {
+            res.send(err)
+            console.log('error', err)
+            console.log('res', result)
+        } else {
+            res.send({
+                success: true,
+                result
+            })
+        }
+    })
+}
+
+module.exports.update_item_review = (req, res) => {
     const { id } = req.params
-    Cart.deleteIteminCart(id, (err, result, fields) => {
-        console.log('Cart Controller delete item in cart')
+    Review.updateItemReview(id, new Review(req.body), (err, result) => {
+        console.log('Review Controller update item review')
+        if (err) {
+            res.send(err)
+            console.log('error', err)
+            console.log('res', result)
+        } else {
+            res.send({
+                success: true,
+                result
+            })
+        }
+    })
+}
+
+module.exports.delete_item_review = (req, res) => {
+    const { id } = req.params
+    Review.deleteItemReview(id, (err, result) => {
+        console.log('Review Controller delete item review')
         if (err) {
             res.send(err)
             console.log('error', err)

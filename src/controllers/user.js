@@ -22,10 +22,11 @@ module.exports.list_all_users = (req, res) => {
 }
 
 module.exports.register_user = (req, res) => {
-    var new_user = new User(req.body)
-    const { name, username, role_id } = req.body
+    const { name, username, password } = req.body
+    const role_id = 3 //assuming that new registered user are all customer
+    var new_user = new User({ name, username, password, role_id })
 
-    if (!new_user.name || !new_user.username || !new_user.password || !new_user.role_id) {
+    if (!new_user.name || !new_user.username || !new_user.password) {
         res.status(400).send({
             error: true,
             message: "Please provide a valid data"
@@ -103,6 +104,74 @@ module.exports.login_user = (req, res) => {
             }
         })
     }
+}
+
+module.exports.create_user = (req, res) => {
+    var new_user = new User(req.body)
+
+    if (!new_user.name || !new_user.username || !new_user.password || !new_user.role_id) {
+        res.status(400).send({
+            error: true,
+            message: "Please provide a valid data"
+        })
+    } else {
+        User.createUser(new_user, (err, result) => {
+            console.log('User Controller create user')
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
+    }
+}
+
+module.exports.update_user = (req, res) => {
+    var new_user = new User(req.body)
+    const { id } = req.params
+
+    if (!new_user.name || !new_user.username || !new_user.password || !new_user.role_id) {
+        res.status(400).send({
+            error: true,
+            message: "Please provide a valid data"
+        })
+    } else {
+        User.updateUser(id, new_user, (err, result) => {
+            console.log('User Controller update user')
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
+    }
+}
+
+module.exports.delete_user = (req, res) => {
+    const { id } = req.params
+    User.deleteUser(id, (err, result) => {
+        console.log('User Controller update user')
+        if (err) {
+            res.send(err)
+            console.log('error', err)
+            console.log('res', result)
+        } else {
+            res.send({
+                success: true,
+                result
+            })
+        }
+    })
 }
 
 module.exports.logout_user = (req, res) => {
