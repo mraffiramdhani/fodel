@@ -3,7 +3,7 @@ exports.up = function (knex) {
     return knex.schema.createTable('revoked_token', table => {
         table.bigIncrements('id')
         table.string('token')
-        table.tinyInteger('is_revoked')
+        table.integer('is_revoked', 1)
         table.timestamps()
     });
 };
