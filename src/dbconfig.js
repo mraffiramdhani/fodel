@@ -12,7 +12,8 @@ const config = {
     host: DB_SERVER,
     user: DB_USER,
     password: DB_PASS,
-    database: DB_DATABASE
+    database: DB_DATABASE,
+    multipleStatements: true
 }
 
 const myconn = mysql.createConnection(config)

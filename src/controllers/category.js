@@ -61,7 +61,7 @@ module.exports.update_category = (req, res) => {
 }
 
 module.exports.delete_category = (req, res) => {
-    const id = req.params.id
+    const { id } = req.params
     Category.deleteCategory(id, (err, result, fields) => {
         console.log('Category Controller delete category')
         if (err) {

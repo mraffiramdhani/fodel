@@ -76,8 +76,8 @@ module.exports.login_user = (req, res) => {
                 console.log('User Controller login user - username verified')
                 if (bcrypt.compareSync(password, result[0].password)) {
                     console.log('User Controller login user - password verified')
-                    const { name, role_id } = result[0]
-                    const token = jwt.sign({ name, username, role_id }, process.env.APP_KEY)
+                    const { id, name, role_id } = result[0]
+                    const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
                     var put_token = new RevToken({ token })
                     RevToken.putToken(put_token, (err, result) => {
                         if (err) {

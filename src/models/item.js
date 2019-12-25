@@ -82,9 +82,38 @@ Item.createItem = (newItem, result) => {
 }
 
 Item.updateItem = (id, data, result) => {
-    const { name, price, description, image, updated_at } = data
+    const { name, price, description, image, category, updated_at } = data
     conn.query('update items set name=?, price=?, description=?, image=?, updated_at=? where id=?',
         [name, price, description, image, updated_at, id],
+        (err, res, fields) => {
+            if (err) {
+                console.log('error: ', err)
+                result(null, err)
+            } else {
+                console.log('data:', res)
+                const cat = category.split(',')
+                var sql = `delete from item_category where item_id=${id};insert into item_category(item_id, category_id) values`
+                console.log(sql)
+                var add_str = []
+                for (var i = 0; i < cat.length; i++) {
+                    add_str.push(`(${id}, ${cat[i]})`)
+                }
+                conn.query(sql + add_str.join(','), (error, rows) => {
+                    if (error) {
+                        console.log('error: ', error)
+                        result(null, error)
+                    } else {
+                        console.log('data:', rows)
+                        result(null, { rows, res })
+                    }
+                })
+            }
+        })
+}
+
+Item.deleteItem = (id, result) => {
+    conn.query('delete from item_category where item_id=?;delete from items where id=?',
+        [id, id],
         (err, res, fields) => {
             if (err) {
                 console.log('error: ', err)
@@ -94,18 +123,6 @@ Item.updateItem = (id, data, result) => {
                 result(null, res)
             }
         })
-}
-
-Item.deleteItem = (id, result) => {
-    conn.query('delete from items where id=?', id, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
-    })
 }
 
 module.exports = Item

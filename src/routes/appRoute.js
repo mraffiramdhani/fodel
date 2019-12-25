@@ -3,7 +3,8 @@ module.exports = (app) => {
     const Users = require('../controllers/user'),
         Categories = require('../controllers/category'),
         Restaurants = require('../controllers/restaurant'),
-        Items = require('../controllers/item');
+        Items = require('../controllers/item'),
+        Carts = require('../controllers/cart');
     const { auth } = require('../middleware')
 
     app.route('/').get((req, res) => {
@@ -45,6 +46,14 @@ module.exports = (app) => {
     app.route('/item/:id')
         .patch(auth, Items.update_item)
         .delete(auth, Items.delete_item)
+
+    app.route('/cart')
+        .get(auth, Carts.list_user_cart)
+        .post(auth, Carts.add_item_to_cart)
+
+    app.route('/cart/:id')
+        .patch(auth, Carts.update_item_in_cart)
+        .delete(auth, Carts.delete_item_in_cart)
 
     // app.route('/user/register')
     //     .post(Users.createUser)
