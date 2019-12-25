@@ -5,7 +5,7 @@ const conn = require('../dbconfig')
 
 var Restaurant = function Restaurant(data) {
     this.name = data.name
-    this.logo = null // for test only
+    this.logo = data.logo
     this.longitude = data.longitude
     this.latitude = data.latitude
     this.description = data.description
