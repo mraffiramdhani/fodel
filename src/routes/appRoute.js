@@ -23,6 +23,9 @@ module.exports = (app) => {
         .get(auth, hasRole('administrator'), Users.list_all_users)
         .post(auth, hasRole('administrator'), Users.create_user)
 
+    app.route('/user/review')
+        .get(auth, hasRole(['customer', 'administrator']), Reviews.list_user_review)
+
     app.route('/logout')
         .get(auth, Users.logout_user)
 
@@ -49,6 +52,14 @@ module.exports = (app) => {
     app.route('/item/:id')
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
         .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
+
+    app.route('/item/:id/review')
+        .get(auth, Reviews.list_item_review)
+        .post(auth, Reviews.add_item_review)
+
+    app.route('/review/:id')
+        .patch(auth, Reviews.update_item_review)
+        .delete(auth, Reviews.delete_item_review)
 
     app.route('/cart')
         .get(auth, hasRole('customer'), Carts.list_user_cart)

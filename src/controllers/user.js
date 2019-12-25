@@ -160,7 +160,7 @@ module.exports.update_user = (req, res) => {
 module.exports.delete_user = (req, res) => {
     const { id } = req.params
     User.deleteUser(id, (err, result) => {
-        console.log('User Controller update user')
+        console.log('User Controller delete user')
         if (err) {
             res.send(err)
             console.log('error', err)
@@ -175,7 +175,7 @@ module.exports.delete_user = (req, res) => {
 }
 
 module.exports.logout_user = (req, res) => {
-    RevToken.revokeToken(req.token,
+    RevToken.revokeToken(req.headers['jwt_token'],
         (err, result, fields) => {
             if (err) {
                 res.send({

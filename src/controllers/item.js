@@ -3,9 +3,8 @@
 var Item = require('../models/item')
 
 module.exports.list_all_item = (req, res) => {
-    const { search, sort } = req.query
-    console.log('search: ' + search + ' - sort: ' + sort)
-    if (search == '' && sort == '') {
+    const { name, rating, min_price, max_price, sort, type, cat } = req.query
+    if (!name && !rating && !min_price && !max_price && !sort && !type && !cat) {
         Item.getAllItem((err, result, fields) => {
             console.log('Item Controller Item index')
             if (err) {
@@ -20,7 +19,18 @@ module.exports.list_all_item = (req, res) => {
             }
         })
     } else {
-        res.send(search)
+        Item.getItemByParams(req.query, (err, result) => {
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
     }
 }
 

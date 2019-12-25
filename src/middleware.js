@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken'),
 const auth = (req, res, next) => {
     if (req.headers['authorization'] && req.headers['authorization'].startsWith('Bearer')) {
         const jwt_token = req.headers['authorization'].substr(7)
-        req.token = jwt_token
+        req.headers['jwt_token'] = jwt_token
         conn.execute('select token from revoked_token where token=? and is_revoked=1', [jwt_token], (err, result, fields) => {
             if (err) {
                 res.send({

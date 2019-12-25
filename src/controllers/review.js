@@ -37,8 +37,10 @@ module.exports.list_user_review = (req, res) => {
 }
 
 module.exports.add_item_review = (req, res) => {
+    const { rating, review } = req.body
     const { id } = req.headers['auth_token']
-    Review.createItemReview(id, new Review(req.body), (err, result) => {
+    const item_id = req.params.id
+    Review.createItemReview(id, new Review({ rating, review, item_id }), (err, result) => {
         console.log('Review Controller add review to item')
         if (err) {
             res.send(err)

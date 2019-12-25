@@ -37,10 +37,21 @@ Item.getItemById = (id, result) => {
     })
 }
 
-Item.getItemByCategory = (cat_id, result) => {
-    conn.query('select p.product_id, p.name from product p inner join product_category pc on p.product_id = pc.product_id where pc.category_id = ?',
-        cat_id,
-        (err, result, fields) => {
+Item.getItemByParams = (params, result) => {
+    const { name, rating, min_price, max_price, sort, type, cat } = params
+    // i call this dynamic searching algoritm
+    var sql = `select i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
+        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : `where `)
+        + ((rating) ? `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) like '${rating}%' ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((name) ? `name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((min_price) ? `price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
+        + ((max_price) ? `price <= ${max_price} ` : ``)
+        + ((sort) ? `order by ${sort} ${((type) ? `${type}` : ``)}` : ``)
+
+    console.log(sql)
+    conn.query(sql,
+        params,
+        (err, res, fields) => {
             if (err) {
                 console.log('error: ', err)
                 result(null, err)

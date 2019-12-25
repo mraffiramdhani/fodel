@@ -38,7 +38,7 @@ Review.getUserReview = (userId, result) => {
 
 Review.createItemReview = (userId, newReview, result) => {
     const { rating, review, item_id, created_at, updated_at } = newReview
-    conn.query('insert into reviews(rating, review, item_id, created_at, updated_at) values(?,?,?,?,?)',
+    conn.query('insert into reviews(rating, review, item_id, user_id, created_at, updated_at) values(?,?,?,?,?,?)',
         [rating, review, item_id, userId, created_at, updated_at],
         (err, res) => {
             if (err) {
