@@ -5,9 +5,9 @@ module.exports = (app) => {
         Restaurants = require('../controllers/restaurant'),
         Items = require('../controllers/item'),
         Carts = require('../controllers/cart');
-    const { auth } = require('../middleware')
+    const { auth, hasRole } = require('../middleware')
 
-    app.route('/').get((req, res) => {
+    app.route('/').get(auth, (req, res) => {
         res.send('Hello World')
     })
 
@@ -18,14 +18,14 @@ module.exports = (app) => {
         .post(Users.login_user)
 
     app.route('/user')
-        .get(auth, Users.list_all_users)
+        .get(auth, hasRole('administrator'), Users.list_all_users)
 
     app.route('/logout')
         .get(auth, Users.logout_user)
 
     app.route('/category')
-        .get(auth, Categories.list_all_category)
-        .post(auth, Categories.create_category)
+        .get(auth, hasRole(['administrator', 'restaurant']), Categories.list_all_category)
+        .post(auth, hasRole(['administrator', 'restaurant']), Categories.create_category)
 
     app.route('/category/:id')
         .patch(auth, Categories.update_category)
