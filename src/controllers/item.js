@@ -1,6 +1,18 @@
 'use strict'
 
-var Item = require('../models/item')
+var Item = require('../models/item'),
+    multer = require('multer'),
+    path = require('path');
+
+const storage = multer.diskStorage({
+    destination: path.join(__dirname + './../../public/images/'),
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() +
+            path.extname(file.originalname));
+    }
+});
+
+var uploads = multer({ storage: storage }).single('image')
 
 module.exports.list_all_item = (req, res) => {
     const { name, rating, min_price, max_price, sort, type, cat } = req.query
@@ -35,44 +47,47 @@ module.exports.list_all_item = (req, res) => {
 }
 
 module.exports.create_item = (req, res) => {
-    var new_item = new Item(req.body)
-
-    // if (!new_category.name) {
-    //     res.status(400).send({
-    //         error: true,
-    //         message: "Please provide a valid data"
-    //     })
-    // } else {
-    Item.createItem(new_item, (err, result) => {
-        console.log('Item Controller create Item')
+    uploads(req, res, function (err) {
         if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
+            return res.end('Error Upload file')
         }
+        req.body.image = req.file.filename
+        Item.createItem(new Item(req.body), (err, result) => {
+            console.log('Item Controller create Item')
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
     })
 }
-// }
 
 module.exports.update_item = (req, res) => {
     const { id } = req.params
-    Item.updateItem(id, new Item(req.body), (err, result, fields) => {
-        console.log('Item Controller update Item')
+    uploads(req, res, function (err) {
         if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
+            return res.end('Error Upload file')
         }
+        req.body.image = req.file.filename
+        Item.updateItem(id, new Item(req.body), (err, result, fields) => {
+            console.log('Item Controller update Item')
+            if (err) {
+                res.send(err)
+                console.log('error', err)
+                console.log('res', result)
+            } else {
+                res.send({
+                    success: true,
+                    result
+                })
+            }
+        })
     })
 }
 

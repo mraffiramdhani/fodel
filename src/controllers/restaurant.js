@@ -1,6 +1,18 @@
 'use strict'
 
-var Restaurant = require('../models/restaurant')
+var Restaurant = require('../models/restaurant'),
+    multer = require('multer'),
+    path = require('path');
+
+const storage = multer.diskStorage({
+    destination: path.join(__dirname + './../../public/images/'),
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() +
+            path.extname(file.originalname));
+    }
+});
+
+var uploads = multer({ storage: storage }).single('image')
 
 module.exports.list_all_restaurant = (req, res) => {
     Restaurant.getAllRestaurant((err, result, fields) => {
