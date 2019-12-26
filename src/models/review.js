@@ -10,73 +10,58 @@ var Review = function Review(data) {
     this.updated_at = new Date()
 }
 
-Review.getItemReview = (itemId, result) => {
-    conn.query('select * from reviews where item_id=?',
-        [itemId], (err, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+Review.getItemReview = (itemId) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from reviews where item_id=?',
+            [itemId], (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Review.getUserReview = (userId, result) => {
-    conn.query('select * from reviews where user_id=?',
-        [userId], (err, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+Review.getUserReview = (userId) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from reviews where user_id=?',
+            [userId], (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Review.createItemReview = (userId, newReview, result) => {
+Review.createItemReview = (userId, newReview) => {
     const { rating, review, item_id, created_at, updated_at } = newReview
-    conn.query('insert into reviews(rating, review, item_id, user_id, created_at, updated_at) values(?,?,?,?,?,?)',
-        [rating, review, item_id, userId, created_at, updated_at],
-        (err, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+    return new Promise((resolve, reject) => {
+        conn.query('insert into reviews(rating, review, item_id, user_id, created_at, updated_at) values(?,?,?,?,?,?)',
+            [rating, review, item_id, userId, created_at, updated_at],
+            (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Review.updateItemReview = (id, rev, result) => {
+Review.updateItemReview = (id, rev) => {
     const { rating, review, updated_at } = rev
-    conn.query('update reviews set rating=?, review=?, updated_at=? where id=?',
-        [rating, review, updated_at, id],
-        (err, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+    return new Promise((resolve, reject) => {
+        conn.query('update reviews set rating=?, review=?, updated_at=? where id=?',
+            [rating, review, updated_at, id],
+            (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Review.deleteItemReview = (id, result) => {
-    conn.query('delete from reviews where id=?', [id],
-        (err, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+Review.deleteItemReview = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('delete from reviews where id=?', [id],
+            (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
 module.exports = Review

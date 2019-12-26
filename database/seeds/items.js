@@ -27,6 +27,10 @@ let createItem = (knex, id, restaurant_id) => {
   })
 }
 
+let truncateRel = (knex) => {
+  return knex('item_category').del()
+}
+
 let createRel = (knex, item_id, category_id) => {
   return knex('item_category').insert({
     item_id,
@@ -39,6 +43,7 @@ exports.seed = function (knex) {
   return knex('items').del()
     .then(function () {
       let records = []
+      records.push(truncateRel(knex))
       let rest_user = range(1, 4)
       // Inserts seed entries
       for (let i = 0; i < rest_user.length; i++) {

@@ -40,7 +40,7 @@ module.exports.update_category = async (req, res) => {
 module.exports.delete_category = async (req, res) => {
     const { id } = req.params
 
-    const data = Category.deleteCategory(id)
+    const data = await Category.deleteCategory(id)
     res.send({
         status: true,
         data

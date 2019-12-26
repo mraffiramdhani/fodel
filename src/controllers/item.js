@@ -10,43 +10,25 @@ module.exports.list_all_item = (req, res) => {
 
     if (!name && !rating && !min_price && !max_price && !sort && !type && !cat) {
         // redis testing
-        return redis.get('all_item_index', (ex, data) => {
+        return redis.get('all_item', async (ex, data) => {
             if (data) {
                 const resultJSON = JSON.parse(data);
                 return res.status(200).json(resultJSON);
             } else {
-                Item.getAllItem((err, result, fields) => {
-                    console.log('Item Controller Item index')
-                    if (err) {
-                        res.send(err)
-                        console.log('error', err)
-                        console.log('res', result)
-                    } else {
-                        // set redis key without expire time
-                        redis.set('all_item_index', JSON.stringify({ source: 'Redis Cache', ...result, }))
-                        return res.status(200).json({ source: 'Database query', ...result, });
-                    }
-                })
+                const rows = await Item.getAllItem()
+                redis.setex('all_item', 600, JSON.stringify({ source: 'Redis Cache', ...rows, }))
+                return res.status(200).json({ source: 'Database query', ...rows, })
             }
         })
     } else {
-        return redis.get(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`, (ex, data) => {
+        return redis.get(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`, async (ex, data) => {
             if (data) {
                 const resultJSON = JSON.parse(data);
                 return res.status(200).json(resultJSON);
             } else {
-                Item.getItemByParams(req.query, (err, result) => {
-                    if (err) {
-                        res.send(err)
-                        console.log('error', err)
-                        console.log('res', result)
-                    } else {
-                        redis.setex(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`,
-                            3600,
-                            JSON.stringify({ source: 'Redis Cache', ...result, }))
-                        return res.status(200).json({ source: 'Database query', ...result, });
-                    }
-                })
+                const rows = await Item.getItemByParams(req.query)
+                redis.setex(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`, 600, JSON.stringify({ source: 'Redis Cache', ...rows, }))
+                return res.status(200).json({ source: 'Database query', ...rows, })
             }
         })
     }
@@ -131,19 +113,11 @@ module.exports.update_item = (req, res) => {
     })
 }
 
-module.exports.delete_item = (req, res) => {
+module.exports.delete_item = async (req, res) => {
     const { id } = req.params
-    Item.deleteItem(id, (err, result, fields) => {
-        console.log('Item Controller delete Item')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
+    const data = await Item.deleteItem(id)
+    res.send({
+        status: true,
+        data
     })
 }
