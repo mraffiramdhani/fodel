@@ -5,53 +5,43 @@ var Category = function Category(category) {
     this.name = category.name
 }
 
-Category.getAllCategories = (result) => {
-    conn.query('select * from categories', (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
+Category.getAllCategories = () => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from categories', (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-Category.createCategory = (newCat, result) => {
+Category.createCategory = (newCat) => {
     const { name } = newCat
-    conn.query('insert into categories set name=?', name, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
+
+    return new Promise((resolve, reject) => {
+        conn.query('insert into categories set name=?', name, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-Category.updateCategory = (id, updCat, result) => {
+Category.updateCategory = (id, updCat) => {
     const { name } = updCat
-    conn.query('update categories set name=? where id=?', [name, id], (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
+
+    return new Promise((resolve, reject) => {
+        conn.query('update categories set name=? where id=?', [name, id], (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-Category.deleteCategory = (id, result) => {
-    conn.query('delete from categories where id=?', id, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
+Category.deleteCategory = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('delete from categories where id=?', id, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 

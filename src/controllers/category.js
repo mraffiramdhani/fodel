@@ -2,23 +2,15 @@
 
 var Category = require('../models/category')
 
-module.exports.list_all_category = (req, res) => {
-    Category.getAllCategories((err, result, fields) => {
-        console.log('Category Controller Category index')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
+module.exports.list_all_category = async (req, res) => {
+    const data = await Category.getAllCategories()
+    res.send({
+        status: true,
+        data
     })
 }
 
-module.exports.create_category = (req, res) => {
+module.exports.create_category = async (req, res) => {
     var new_category = new Category(req.body)
 
     if (!new_category.name) {
@@ -27,52 +19,30 @@ module.exports.create_category = (req, res) => {
             message: "Please provide a valid data"
         })
     } else {
-        Category.createCategory(new_category, (err, result) => {
-            console.log('Category Controller create category')
-            if (err) {
-                res.send(err)
-                console.log('error', err)
-                console.log('res', result)
-            } else {
-                res.send({
-                    success: true,
-                    result
-                })
-            }
+        const data = await Category.createCategory(new_category)
+        res.send({
+            status: true,
+            data
         })
     }
 }
 
-module.exports.update_category = (req, res) => {
+module.exports.update_category = async (req, res) => {
     const { id } = req.params
-    Category.updateCategory(id, new Category(req.body), (err, result, fields) => {
-        console.log('Category Controller update category')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
+
+    const data = await Category.updateCategory(id, new Category(req.body))
+    res.send({
+        status: true,
+        data
     })
 }
 
-module.exports.delete_category = (req, res) => {
+module.exports.delete_category = async (req, res) => {
     const { id } = req.params
-    Category.deleteCategory(id, (err, result, fields) => {
-        console.log('Category Controller delete category')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
+
+    const data = Category.deleteCategory(id)
+    res.send({
+        status: true,
+        data
     })
 }
