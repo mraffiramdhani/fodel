@@ -2,18 +2,7 @@
 
 var Restaurant = require('../models/restaurant'),
     Item = require('../models/item'),
-    multer = require('multer'),
-    path = require('path');
-
-const storage = multer.diskStorage({
-    destination: path.join(__dirname + './../../public/images/'),
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() +
-            path.extname(file.originalname));
-    }
-});
-
-var uploads = multer({ storage: storage }).single('logo')
+    multer = require('../multer');
 
 module.exports.list_all_restaurant = (req, res) => {
     Restaurant.getAllRestaurant((err, result, fields) => {
@@ -57,12 +46,12 @@ module.exports.show_restaurant = (req, res) => {
 }
 
 module.exports.create_restaurant = (req, res) => {
-    uploads(req, res, function (err) {
-        if (err) {
-            return res.end('Error Upload file')
+    multer.uploads(req, res, function (err) {
+        if (req.fileValidationError) {
+            return res.end(req.fileValidationError)
         }
 
-        req.body.logo = req.file.filename
+        req.body.image = req.file.filename
         Restaurant.createRestaurant(new Restaurant(req.body), (err, result, fields) => {
             console.log('Restaurant Controller create restaurant')
             if (err) {
@@ -82,12 +71,11 @@ module.exports.create_restaurant = (req, res) => {
 module.exports.update_restaurant = (req, res) => {
     const { id } = req.params
 
-    uploads(req, res, function (err) {
-        if (err) {
-            return res.end('Error Upload file')
+    multer.uploads(req, res, function (err) {
+        if (req.fileValidationError) {
+            return res.end(req.fileValidationError)
         }
-
-        req.body.logo = req.file.filename
+        req.body.image = req.file.filename
         Restaurant.updateRestaurant(id, new Restaurant(req.body), (err, result, fields) => {
             console.log('Restaurant Controller update restaurant')
             if (err) {

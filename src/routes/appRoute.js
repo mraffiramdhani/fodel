@@ -10,7 +10,7 @@ module.exports = (app) => {
     const { auth, hasRole } = require('../middleware')
 
     app.route('/').get(auth, (req, res) => {
-        res.send('Hello World')
+        res.send(app.client)
     })
 
     app.route('/register')

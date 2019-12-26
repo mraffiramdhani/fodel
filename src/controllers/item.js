@@ -2,32 +2,30 @@
 
 var Item = require('../models/item'),
     Restaurant = require('../models/restaurant'),
-    multer = require('multer'),
-    path = require('path');
-
-const storage = multer.diskStorage({
-    destination: path.join(__dirname + './../../public/images/'),
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() +
-            path.extname(file.originalname));
-    }
-});
-
-var uploads = multer({ storage: storage }).single('image')
+    redis = require('../redis'),
+    multer = require('../multer');
 
 module.exports.list_all_item = (req, res) => {
     const { name, rating, min_price, max_price, sort, type, cat } = req.query
+
     if (!name && !rating && !min_price && !max_price && !sort && !type && !cat) {
-        Item.getAllItem((err, result, fields) => {
-            console.log('Item Controller Item index')
-            if (err) {
-                res.send(err)
-                console.log('error', err)
-                console.log('res', result)
+        // redis testing
+        return redis.get('all_item_index', (ex, data) => {
+            if (data) {
+                const resultJSON = JSON.parse(data);
+                return res.status(200).json(resultJSON);
             } else {
-                res.send({
-                    success: true,
-                    result
+                Item.getAllItem((err, result, fields) => {
+                    console.log('Item Controller Item index')
+                    if (err) {
+                        res.send(err)
+                        console.log('error', err)
+                        console.log('res', result)
+                    } else {
+                        // set redis key without expire time
+                        redis.set('all_item_index', JSON.stringify({ source: 'Redis Cache', ...result, }))
+                        return res.status(200).json({ source: 'Database query', ...result, });
+                    }
                 })
             }
         })
@@ -82,9 +80,9 @@ module.exports.show_item = (req, res) => {
 }
 
 module.exports.create_item = (req, res) => {
-    uploads(req, res, function (err) {
-        if (err) {
-            return res.end('Error Upload file')
+    multer.uploads(req, res, function (err) {
+        if (req.fileValidationError) {
+            return res.end(req.fileValidationError)
         }
         req.body.image = req.file.filename
         Item.createItem(new Item(req.body), (err, result) => {
@@ -105,9 +103,9 @@ module.exports.create_item = (req, res) => {
 
 module.exports.update_item = (req, res) => {
     const { id } = req.params
-    uploads(req, res, function (err) {
-        if (err) {
-            return res.end('Error Upload file')
+    multer.uploads(req, res, function (err) {
+        if (req.fileValidationError) {
+            return res.end(req.fileValidationError)
         }
         req.body.image = req.file.filename
         Item.updateItem(id, new Item(req.body), (err, result, fields) => {
