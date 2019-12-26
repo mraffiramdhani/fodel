@@ -1,6 +1,7 @@
 'use strict'
 
 var Item = require('../models/item'),
+    Restaurant = require('../models/restaurant'),
     multer = require('multer'),
     path = require('path');
 
@@ -54,9 +55,27 @@ module.exports.show_item = (req, res) => {
             console.log('error', err)
             console.log('res', result)
         } else {
-            res.send({
-                success: true,
-                result
+            Restaurant.getRestaurantById(result[0].restaurant_id, (e, r) => {
+                if (e) {
+                    res.send(e)
+                    console.log('error', e)
+                    console.log('res', r)
+                } else {
+                    Item.getItemByRestaurant(result[0].restaurant_id, (error, rows) => {
+                        if (error) {
+                            res.send(error)
+                            console.log('error', error)
+                            console.log('res', rows)
+                        } else {
+                            res.send({
+                                success: true,
+                                result,
+                                restaurant: r,
+                                showcase: rows
+                            })
+                        }
+                    })
+                }
             })
         }
     })

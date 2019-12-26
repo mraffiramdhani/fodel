@@ -39,9 +39,9 @@ exports.seed = function (knex) {
   return knex('items').del()
     .then(function () {
       let records = []
-      let rest_user = range(2, 5)
+      let rest_user = range(1, 4)
       // Inserts seed entries
-      for (let i = 0; i <= rest_user.length; i++) {
+      for (let i = 0; i < rest_user.length; i++) {
         for (let j = 1; j <= 10; j++) {
           let id = j
           if (i > 0) id = `${((j == 10) ? i + 1 + `0` : i)}` + `${((j == 10) ? `` : j)}`

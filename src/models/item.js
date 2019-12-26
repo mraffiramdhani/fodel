@@ -37,6 +37,18 @@ Item.getItemById = (id, result) => {
     })
 }
 
+Item.getItemByRestaurant = (id, result) => {
+    conn.query('select * from items where restaurant_id=?', id, (err, res, fields) => {
+        if (err) {
+            console.log('error: ', err)
+            result(null, err)
+        } else {
+            console.log('data:', res)
+            result(null, res)
+        }
+    })
+}
+
 Item.getItemByParams = (params, result) => {
     const { name, rating, min_price, max_price, sort, type, cat } = params
     // i call this dynamic searching algoritm
