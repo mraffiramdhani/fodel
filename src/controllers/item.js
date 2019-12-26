@@ -30,15 +30,22 @@ module.exports.list_all_item = (req, res) => {
             }
         })
     } else {
-        Item.getItemByParams(req.query, (err, result) => {
-            if (err) {
-                res.send(err)
-                console.log('error', err)
-                console.log('res', result)
+        return redis.get(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`, (ex, data) => {
+            if (data) {
+                const resultJSON = JSON.parse(data);
+                return res.status(200).json(resultJSON);
             } else {
-                res.send({
-                    success: true,
-                    result
+                Item.getItemByParams(req.query, (err, result) => {
+                    if (err) {
+                        res.send(err)
+                        console.log('error', err)
+                        console.log('res', result)
+                    } else {
+                        redis.setex(`index:${name},${rating},${min_price},${max_price},${sort},${type},${cat}`,
+                            3600,
+                            JSON.stringify({ source: 'Redis Cache', ...result, }))
+                        return res.status(200).json({ source: 'Database query', ...result, });
+                    }
                 })
             }
         })
