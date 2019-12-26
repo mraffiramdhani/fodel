@@ -42,6 +42,7 @@ module.exports = (app) => {
         .post(auth, Restaurants.create_restaurant)
 
     app.route('/restaurant/:id')
+        .get(auth, Restaurants.show_restaurant)
         .patch(auth, Restaurants.update_restaurant)
         .delete(auth, Restaurants.delete_restaurant)
 
@@ -50,6 +51,7 @@ module.exports = (app) => {
         .post(auth, hasRole(['administrator', 'restaurant']), Items.create_item)
 
     app.route('/item/:id')
+        .get(auth, Items.show_item)
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
         .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
 

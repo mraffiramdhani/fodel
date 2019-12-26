@@ -46,6 +46,22 @@ module.exports.list_all_item = (req, res) => {
     }
 }
 
+module.exports.show_item = (req, res) => {
+    const { id } = req.params
+    Item.getItemById(id, (err, result) => {
+        if (err) {
+            res.send(err)
+            console.log('error', err)
+            console.log('res', result)
+        } else {
+            res.send({
+                success: true,
+                result
+            })
+        }
+    })
+}
+
 module.exports.create_item = (req, res) => {
     uploads(req, res, function (err) {
         if (err) {
