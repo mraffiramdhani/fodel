@@ -41,7 +41,7 @@ Item.getItemByParams = (params, result) => {
     const { name, rating, min_price, max_price, sort, type, cat } = params
     // i call this dynamic searching algoritm
     var sql = `select i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
-        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : `where `)
+        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : `${((!sort) ? `where ` : ``)}`)
         + ((rating) ? `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
         + ((name) ? `name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
         + ((min_price) ? `price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
