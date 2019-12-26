@@ -20,7 +20,7 @@ module.exports.list_item_review = (req, res) => {
 }
 
 module.exports.list_user_review = (req, res) => {
-    const { id } = req.headers['auth_token']
+    const { id } = req.headers.auth_token
     Review.getUserReview(id, (err, result) => {
         console.log('Review Controller user review index')
         if (err) {
@@ -38,7 +38,7 @@ module.exports.list_user_review = (req, res) => {
 
 module.exports.add_item_review = (req, res) => {
     const { rating, review } = req.body
-    const { id } = req.headers['auth_token']
+    const { id } = req.headers.auth_token
     const item_id = req.params.id
     Review.createItemReview(id, new Review({ rating, review, item_id }), (err, result) => {
         console.log('Review Controller add review to item')

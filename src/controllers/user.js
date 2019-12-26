@@ -59,7 +59,7 @@ module.exports.register_user = (req, res) => {
     }
 }
 
-module.exports.login_user = (req, res) => {
+module.exports.login_user = async (req, res) => {
     const { username, password } = req.body
 
     if (!username || !password) {
@@ -68,41 +68,37 @@ module.exports.login_user = (req, res) => {
             message: "Please provide a valid data"
         })
     } else {
-        User.getUserByUsername(username, (err, result) => {
-            if (err) {
-                res.send(err)
-                console.log('error', err)
-                console.log('res', result)
-            } else if (result.length > 0) {
-                console.log('User Controller login user - username verified')
-                if (bcrypt.compareSync(password, result[0].password)) {
-                    console.log('User Controller login user - password verified')
-                    const { id, name, role_id } = result[0]
-                    const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
-                    var put_token = new RevToken({ token })
-                    RevToken.putToken(put_token, (err, result) => {
-                        if (err) {
-                            res.send(err)
-                            console.log('error', err)
-                            console.log('res', result)
-                        } else {
-                            res.send({
-                                success: true,
-                                result,
-                                token
-                            })
-                        }
-                    })
-                } else {
-
-                }
+        const user = await User.getUserByUsername(username)
+        if (user) {
+            console.log('User Controller login user - username verified')
+            if (bcrypt.compareSync(password, user[0].password)) {
+                console.log('User Controller login user - password verified')
+                const { id, name, role_id } = user[0]
+                const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
+                var put_token = new RevToken({ token })
+                RevToken.putToken(put_token, (err, result) => {
+                    if (err) {
+                        res.send(err)
+                    } else {
+                        res.send({
+                            success: true,
+                            result,
+                            token
+                        })
+                    }
+                })
             } else {
                 res.send({
                     success: false,
-                    message: 'User not found.'
+                    message: 'Invalid Password.'
                 })
             }
-        })
+        } else {
+            res.send({
+                success: false,
+                message: 'User not found.'
+            })
+        }
     }
 }
 

@@ -51,7 +51,7 @@ Item.getItemByParams = (params) => {
         + ((max_price) ? `price <= ${max_price} ` : ``)
         + ((sort) ? `order by ${sort} ${((type) ? `${type}` : ``)}` : ``)
 
-    // console.log(sql)
+    console.log(sql)
     return new Promise((resolve, reject) => {
         conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)
@@ -60,68 +60,60 @@ Item.getItemByParams = (params) => {
     })
 }
 
-Item.createItem = (newItem, result) => {
+Item.createItem = (newItem) => {
     const { name, price, description, image, category, restaurant_id, created_at, updated_at } = newItem
 
-    const insertItem = new Promise((resolve, reject) => {
-        conn.query('insert into items(name, price, description, image, restaurant_id) values(?,?,?,?,?)',
+    return new Promise((resolve, reject) => {
+        conn.query('insert into items(name, price, description, image, restaurant_id, created_at, updated_at) values(?,?,?,?,?,?,?)',
             [name, price, description, image, restaurant_id, created_at, updated_at],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)
             })
-    })
-
-    insertItem.then((data) => {
+    }).then((data) => {
         const cat = category.split(',')
         var sql = 'insert into item_category(item_id, category_id) values'
         var add_str = []
         for (var i = 0; i < cat.length; i++) {
             add_str.push(`(${data.insertId}, ${cat[i]})`)
         }
-        conn.query(sql + add_str.join(','), (error, rows) => {
-            if (error) {
-                console.log('error: ', error)
-                result(null, error)
-            } else {
-                console.log('data:', rows)
-                result(null, { rows, data })
-            }
+        return new Promise((resolve, reject) => {
+            conn.query(sql + add_str.join(','), (error, rows) => {
+                if (error) reject(error)
+                resolve({ rows, data })
+            })
         })
     }).catch((errLog) => {
         console.log(errLog)
+        return new Error(errLog)
     })
 }
 
-Item.updateItem = (id, data, result) => {
+Item.updateItem = (id, data) => {
     const { name, price, description, image, category, updated_at } = data
 
-    const updateItem = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         conn.query('update items set name=?, price=?, description=?, image=?, updated_at=? where id=?',
             [name, price, description, image, updated_at, id],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)
             })
-    })
-
-    updateItem.then((item) => {
+    }).then((item) => {
         const cat = category.split(',')
         var sql = `delete from item_category where item_id=${id};insert into item_category(item_id, category_id) values`
-        console.log(sql)
         var add_str = []
         for (var i = 0; i < cat.length; i++) {
             add_str.push(`(${id}, ${cat[i]})`)
         }
-        conn.query(sql + add_str.join(','), (error, rows) => {
-            if (error) {
-                console.log('error: ', error)
-                result(null, error)
-            } else {
-                console.log('data:', rows)
-                result(null, { rows, item })
-            }
+        return new Promise((resolve, reject) => {
+            conn.query(sql + add_str.join(','), (error, rows) => {
+                if (error) reject(error)
+                resolve({ rows, item })
+            })
         })
+    }).catch((errLog) => {
+        return new Error(errLog)
     })
 }
 

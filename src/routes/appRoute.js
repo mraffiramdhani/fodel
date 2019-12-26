@@ -30,7 +30,7 @@ module.exports = (app) => {
         .get(auth, Users.logout_user)
 
     app.route('/category')
-        .get(auth, hasRole(['administrator', 'restaurant']), Categories.list_all_category)
+        .get(auth, Categories.list_all_category)
         .post(auth, hasRole(['administrator', 'restaurant']), Categories.create_category)
 
     app.route('/category/:id')
