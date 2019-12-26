@@ -4,6 +4,7 @@ var Cart = require('../models/cart')
 
 module.exports.list_user_cart = (req, res) => {
     const { id } = req.headers['auth_token']
+
     Cart.getCartByUserId(id, (err, result) => {
         console.log('Cart Controller Cart index')
         if (err) {

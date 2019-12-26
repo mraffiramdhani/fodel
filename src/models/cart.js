@@ -11,14 +11,11 @@ var Cart = function Cart(cart) {
 }
 
 Cart.getCartByUserId = (userId, result) => {
-    conn.query('select * from carts where user_id=?', userId, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
-        }
+    return new Promise((resolve, reject) => {
+        conn.query('select * from carts where user_id=?', userId, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(result(res))
+        })
     })
 }
 
