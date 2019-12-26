@@ -5,7 +5,7 @@ const faker = require('faker'),
 let createRecord = (knex, id, role_id) => {
   return knex('users').insert({
     id,
-    name: faker.internet.userName(),
+    name: faker.name.findName(),
     username: faker.internet.userName(),
     password: bcrypt.hashSync('password'),
     role_id,
@@ -20,7 +20,7 @@ exports.seed = (knex) => {
     .then(function () {
 
       let records = []
-      let roles = [1, 2, 3, 2, 3, 2, 3, 3, 3]
+      let roles = [1, 2, 2, 2, 2, 3, 3, 3, 3, 3]
       // Inserts seed entries
       for (let i = 1; i <= roles.length; i++) {
         records.push(createRecord(knex, i, roles[i - 1]))
