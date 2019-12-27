@@ -1,12 +1,12 @@
-<h1 align="center">ExpressJS - Simple Notes App RESTfull API</h1>
+<h1 align="center">Fodel - Food Delivery App RESTfull API</h1>
 
 
 
-Note App is a simple note application specially for backend only. Built with NodeJs using the ExpressJs Framework.
+Fodel is a Food Delivery application specially for backend only. Built with NodeJs using the ExpressJs Framework.
 Express.js is a web application framework for Node.js. [More about Express](https://en.wikipedia.org/wiki/Express.js)
 ## Built With
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-orange.svg?style=rounded-square)](https://expressjs.com/en/starter/installing.html)
-[![Node.js](https://img.shields.io/badge/Node.js-v.10.16-green.svg?style=rounded-square)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-v.12.14-green.svg?style=rounded-square)](https://nodejs.org/)
 
 ## Requirements
 1. <a href="https://nodejs.org/en/download/">Node Js</a>
