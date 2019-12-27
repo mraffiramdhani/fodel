@@ -5,7 +5,6 @@ const Item = require('../models/item'),
     redis = require('../redis'),
     multer = require('../multer');
 
-// working as intended
 module.exports.list_all_item = async (req, res) => {
     const { name, rating, min_price, max_price, sort, type, cat } = req.query
     var numRows
@@ -64,7 +63,7 @@ module.exports.list_all_item = async (req, res) => {
         var limit = numRows >= 10 ? skip + ',' + numPerPage : null
         return redis.get(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, async (ex, data) => {
             if (data) {
-                const resultJSON = JSON.parse(data);
+                const responseJSON = JSON.parse(data);
                 return res.status(200).json({
                     status: 200,
                     message: 'OK',
@@ -99,7 +98,6 @@ module.exports.list_all_item = async (req, res) => {
     }
 }
 
-// working as intended
 module.exports.show_item = async (req, res) => {
     const { id } = req.params
     return redis.get(`show_item_${id}`, async (error, data) => {
@@ -110,8 +108,8 @@ module.exports.show_item = async (req, res) => {
             await Item.getItemById(id).then(async (item) => {
                 await Restaurant.getRestaurantById(item[0].restaurant_id).then(async (restaurant) => {
                     await Item.getItemByRestaurant(restaurant[0].id).then((rows) => {
-                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ source: 'Redis Cache', item, restaurant, related: rows }))
-                        return res.status(200).json({ source: 'Database query', item, restaurant, related: rows })
+                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, message: 'OK', dataSource: 'Redis Cache', item, restaurant, showcase: rows }))
+                        return res.status(200).json({ status: 200, message: 'OK', dataSource: 'Database query', item, restaurant, showcase: rows })
                     })
                 })
             })
@@ -119,7 +117,6 @@ module.exports.show_item = async (req, res) => {
     })
 }
 
-// working asn intended
 module.exports.create_item = async (req, res) => {
     multer.uploads(req, res, async () => {
         if (req.fileValidationError) {
