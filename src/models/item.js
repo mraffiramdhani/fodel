@@ -35,14 +35,14 @@ Item.getNumRowsParam = (params) => {
     var { name, rating, min_price, max_price, sort, type, cat } = params
 
     if (sort === 'rating') sort = `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id)`
-    const fixedSort = sort + ' ' + type || `updated_at asc`
+    const fixedSort = sort ? `order by ` + sort + ' ' + type : `` || `order by updated_at asc`
     var sql = `select count(distinct id) as numRows from items i `
         + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
         + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
         + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
         + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
         + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
-        + `order by ${fixedSort}`
+        + fixedSort + ` `
 
     console.log(sql)
     return new Promise((resolve, reject) => {
@@ -75,7 +75,7 @@ Item.getItemByParams = (params, limit = null) => {
     var { name, rating, min_price, max_price, sort, type, cat } = params
 
     if (sort === 'rating') sort = `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id)`
-    const fixedSort = sort + ' ' + type || `updated_at asc`
+    const fixedSort = sort ? `order by ` + sort + ' ' + type : `` || `order by updated_at asc`
 
     var sql = `select distinct i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
         + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
@@ -83,7 +83,7 @@ Item.getItemByParams = (params, limit = null) => {
         + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
         + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
         + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
-        + `order by ${fixedSort} `
+        + fixedSort + ` `
         + ((limit) ? `limit ` + limit : ``)
 
     console.log(sql)

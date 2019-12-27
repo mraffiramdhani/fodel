@@ -23,16 +23,18 @@ module.exports.list_all_item = async (req, res) => {
         var limit = skip + ',' + numPerPage
         return redis.get(`all_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
             if (data) {
-                const resultJSON = JSON.parse(data);
+                const responseJSON = JSON.parse(data);
                 return res.status(200).send({
+                    status: 200,
+                    message: 'OK',
                     success: true,
-                    source: 'Redis Cache',
-                    data: resultJSON
+                    dataSource: 'Redis Cache',
+                    data: responseJSON
                 });
             } else {
-                await Item.getAllItem(limit).then((results) => {
+                await Item.getAllItem(limit).then((items) => {
                     var responsePayload = {
-                        results
+                        items
                     }
                     if (page < numPages) {
                         responsePayload.pagination = {
@@ -64,9 +66,11 @@ module.exports.list_all_item = async (req, res) => {
             if (data) {
                 const resultJSON = JSON.parse(data);
                 return res.status(200).json({
+                    status: 200,
+                    message: 'OK',
                     success: true,
-                    source: 'Redis Cache',
-                    data: resultJSON
+                    dataSource: 'Redis Cache',
+                    data: responseJSON
                 });
             } else {
                 await Item.getItemByParams(req.query, limit).then((results) => {
