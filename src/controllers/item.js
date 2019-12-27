@@ -65,6 +65,7 @@ module.exports.show_item = async (req, res) => {
     })
 }
 
+// working asn intended
 module.exports.create_item = async (req, res) => {
     multer.uploads(req, res, async () => {
         if (req.fileValidationError) {
@@ -80,6 +81,7 @@ module.exports.create_item = async (req, res) => {
     })
 }
 
+// working asn intended
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
     multer.uploads(req, res, async () => {
@@ -87,18 +89,19 @@ module.exports.update_item = async (req, res) => {
             return res.end(req.fileValidationError)
         }
         req.body.image = req.file.filename
-        await Item.updateItem(id, new Item(req.body)).then((item) => {
+        await Item.updateItem(id, new Item(req.body)).then((data) => {
             return res.json({
                 success: true,
-                item
+                data
             })
         })
     })
 }
 
+// working as intended
 module.exports.delete_item = async (req, res) => {
     const { id } = req.params
-    await Item.deleteItem(id).then((result) => {
+    await Item.deleteItem(id).then((data) => {
         res.send({
             status: true,
             data

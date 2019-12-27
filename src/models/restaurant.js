@@ -61,7 +61,7 @@ Restaurant.deleteRestaurant = (id) => {
     return new Promise((resolve, reject) => {
         conn.query('delete from restaurants where id=?', id, (err, res, fields) => {
             if (err) reject(err)
-            resolve(ress)
+            resolve(res)
         })
     })
 }

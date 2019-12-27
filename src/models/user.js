@@ -11,27 +11,21 @@ var User = function User(user) {
     this.updated_at = new Date()
 }
 
-User.getAllUser = (result) => {
-    conn.query('select * from users', (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getAllUser = () => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users', (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-User.getUserById = (id, result) => {
-    conn.query('select * from users where id=?', id, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getUserById = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users where id=?', id, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
@@ -46,7 +40,7 @@ User.getUserByUsername = (username) => {
 
 User.getUserByRole = (role_id) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from users where role_id=?', role_id, (req, res) => {
+        conn.query('select * from users where role_id=?', role_id, (err, res) => {
             if (err) reject(err)
             resolve(res)
         })
@@ -73,7 +67,7 @@ User.updateUser = (id, user) => {
     return new Promise((resolve, reject) => {
         conn.query('update users set name=?, username=?, password=?, role_id=?, updated_at=? where id=?',
             [name, username, encPass, role_id, updated_at, id],
-            (req, res) => {
+            (err, res) => {
                 if (err) reject(err)
                 resolve(res)
             })
@@ -82,7 +76,7 @@ User.updateUser = (id, user) => {
 
 User.deleteUser = (id) => {
     return new Promise((resolve, reject) => {
-        conn.query('delete from users where id=?', id, (req, res) => {
+        conn.query('delete from users where id=?', id, (err, res) => {
             if (err) reject(err)
             resolve(res)
         })

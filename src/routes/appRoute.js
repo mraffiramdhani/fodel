@@ -23,6 +23,10 @@ module.exports = (app) => {
         .get(auth, hasRole('administrator'), Users.list_all_users)
         .post(auth, hasRole('administrator'), Users.create_user)
 
+    app.route('/user/:id')
+        .patch(auth, hasRole(['customer', 'administrator']), Users.update_user)
+        .delete(auth, hasRole('administrator'), Users.delete_user)
+
     app.route('/user/review')
         .get(auth, hasRole(['customer', 'administrator']), Reviews.list_user_review)
 
@@ -39,12 +43,12 @@ module.exports = (app) => {
 
     app.route('/restaurant')
         .get(auth, Restaurants.list_all_restaurant)
-        .post(auth, Restaurants.create_restaurant)
+        .post(auth, hasRole('administrator'), Restaurants.create_restaurant)
 
     app.route('/restaurant/:id')
         .get(auth, Restaurants.show_restaurant)
-        .patch(auth, Restaurants.update_restaurant)
-        .delete(auth, Restaurants.delete_restaurant)
+        .patch(auth, hasRole('administrator'), Restaurants.update_restaurant)
+        .delete(auth, hasRole('administrator'), Restaurants.delete_restaurant)
 
     app.route('/item')
         .get(auth, Items.list_all_item)
@@ -57,11 +61,11 @@ module.exports = (app) => {
 
     app.route('/item/:id/review')
         .get(auth, Reviews.list_item_review)
-        .post(auth, Reviews.add_item_review)
+        .post(auth, hasRole('customer'), Reviews.add_item_review)
 
     app.route('/review/:id')
-        .patch(auth, Reviews.update_item_review)
-        .delete(auth, Reviews.delete_item_review)
+        .patch(auth, hasRole('all'), Reviews.update_item_review)
+        .delete(auth, hasRole('all'), Reviews.delete_item_review)
 
     app.route('/cart')
         .get(auth, hasRole('customer'), Carts.list_user_cart)

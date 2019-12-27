@@ -30,6 +30,15 @@ Review.getUserReview = (userId) => {
     })
 }
 
+Review.getReviewById = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from reviews where id=?', [id], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
 Review.createItemReview = (userId, newReview) => {
     const { rating, review, item_id, created_at, updated_at } = newReview
     return new Promise((resolve, reject) => {

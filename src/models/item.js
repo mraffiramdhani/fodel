@@ -43,15 +43,15 @@ Item.getItemByRestaurant = (id) => {
 Item.getItemByParams = (params) => {
     const { name, rating, min_price, max_price, sort, type, cat } = params
 
-    var sql = `select i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
-        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : `${((!sort) ? `where ` : ``)}`)
-        + ((rating) ? `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((name) ? `name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((min_price) ? `price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
-        + ((max_price) ? `price <= ${max_price} ` : ``)
+    var sql = `select i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i inner join item_category as ic on i.id = ic.item_id `
+        + ((cat) ? `where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
+        + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
         + ((sort) ? `order by ${sort} ${((type) ? `${type}` : ``)}` : ``)
 
-    console.log(sql)
+    // console.log(sql)
     return new Promise((resolve, reject) => {
         conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)

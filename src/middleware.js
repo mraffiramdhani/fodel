@@ -41,6 +41,7 @@ const auth = (req, res, next) => {
 }
 
 const hasRole = function HasRole(roles) {
+    if (roles === 'all') roles = ['customer', 'administrator', 'restaurant']
     return (req, res, next) => {
         const { role_id } = req.headers.auth_token
         conn.execute('select * from roles where id=?', [role_id], (err, result) => {
