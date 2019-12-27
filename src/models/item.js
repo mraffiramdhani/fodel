@@ -13,9 +13,39 @@ var Item = function Item(item) {
     this.updated_at = new Date()
 }
 
-Item.getAllItem = () => {
+Item.getAllItem = (limit) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from items', (err, res, fields) => {
+        conn.query('select * from items limit ' + limit, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Item.getNumRows = () => {
+    return new Promise((resolve, reject) => {
+        conn.query('select count(*) as numRows from items', (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Item.getNumRowsParam = (params) => {
+    const { name, rating, min_price, max_price, sort, type, cat } = params
+
+    const fixedSort = `updated_at asc` || sort + ' ' + type
+    var sql = `select count(distinct id) as numRows from items i `
+        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
+        + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
+        + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
+        + `order by ${fixedSort}`
+
+    console.log(sql)
+    return new Promise((resolve, reject) => {
+        conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
@@ -40,18 +70,21 @@ Item.getItemByRestaurant = (id) => {
     })
 }
 
-Item.getItemByParams = (params) => {
+Item.getItemByParams = (params, limit = null) => {
     const { name, rating, min_price, max_price, sort, type, cat } = params
 
-    var sql = `select i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i inner join item_category as ic on i.id = ic.item_id `
-        + ((cat) ? `where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
+    const fixedSort = `updated_at asc` || sort + ' ' + type
+
+    var sql = `select distinct i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
+        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
         + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
         + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
         + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
         + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
-        + ((sort) ? `order by ${sort} ${((type) ? `${type}` : ``)}` : ``)
+        + `order by ${fixedSort} `
+        + ((limit) ? `limit ` + limit : ``)
 
-    // console.log(sql)
+    console.log(sql)
     return new Promise((resolve, reject) => {
         conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)
