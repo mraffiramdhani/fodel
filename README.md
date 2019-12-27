@@ -11,7 +11,7 @@ Express.js is a web application framework for Node.js. [More about Express](http
 ## Requirements
 1. <a href="https://nodejs.org/en/download/">Node Js</a>
 2. Node_modules
-3. <a href="https://www.getpostman.com/">Postman</a>
+3. <a href="https://www.getpostman.com/">Postman</a> or <a href="https://insomnia.rest/">Insomnia</a>
 4. Web Server (ex. localhost)
 
 ## How to run the app ?
@@ -27,37 +27,83 @@ Express.js is a web application framework for Node.js. [More about Express](http
 ## Set up .env file
 Open .env file on your favorite code editor, and copy paste this code below :
 ```
-PORT=3000
-HOST=localhost
-USER=root // default
-PASS= // default
-DATABASE=note
-NODE_ENV=development node server.js
+APP_PORT=3000
+APP_URI=http://localhost:3000/
+APP_KEY=y0u12_4pp_k3y
+
+DB_SERVER=localhost
+DB_USER=root
+DB_PASS=secret
+DB_DATABASE=fodel
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 ```
 
 ## End Point
 **1. GET**
-* `/notes`
-* `/notes?search=lorem&sort=ASC&limit=5&page=1`
-* `/note/:id` (Get note by id)
+* `/`
+* `/user`
+* `/user/review`
+* `/logout`
+* `/category`
+* `/restaurant`
+* `/restaurant/:id` (Get Restaurant by ID)
+* `/item`
+* `/item/:id` (Get Item by ID)
+* `/item/:id/review` (Get Item Review by ID)
+* `/cart`
 * `/categories`
-* `/categories?search=Diary`
-* `/category/:id` (Get category by id)
 
 
 **2. POST**
-* `/note`
-    * ``` { "title": "Party", "note": "Herman's Party at 19.00", "category": 1 } ```
+* `/register`
+    * ``` { "name": "John Doe", "username": "john_doe", "password": "s3cr3t_k3y" } ```
+
+* `/login`
+    * ``` { "username": "john_doe", "password": "s3cr3t_k3y" } ```
+
+* `/user`
+    * ``` { "name": "John Doe", "username": "john_doe", "password": "s3cr3t_k3y", "role_id": 1 } ```
 
 * `/category`
-    * ``` { "categoryName": "Category6" } ```
+    * ``` { "name": "Cake" } ```
+
+* `/restaurant`
+    * ``` { "name": "Joe's Pizza", "logo": "img.png", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
+
+* `/item`
+    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3, "restaurant_id": 1 } ```
+
+* `/item/:id/review`
+    * ``` { "rating": 4, "review": "Lorem Ipsum." } ```
+
+* `/cart`
+    * ``` { "item_id": 1, "quantity": 3, "description": "Lorem Ipsum." } ```
 
 **3. PATCH**
-* `/note/:id` (Update note by id)
-   * ``` { "title": "Party", "note": "Herman's Party at 18.00", "category": 2 } ```
-* `/category/:id` (Update category by id)
-   * ``` { "categoryName": "Category8" } ```
+* `/user/:id` (Update User by id)
+   * ``` { "name": "John Doe", "username": "john_doe", "password": "s3cr3t_k3y", "role_id": 1 } ```
+
+* `/category/:id` (Update Category by id)
+   * ``` { "name": "Category8" } ```
+
+* `/restaurant/:id` (Update Restaurant by id)
+   * ``` { "name": "Joe's Pizza", "logo": "img.png", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
+
+* `/item/:id` (Update Item by id)
+   * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3 } ```
+
+* `/review/:id` (Update Review by id)
+   * ``` { "rating": 4, "review": "Lorem Ipsum." } ```
+
+* `/cart/:id` (Update Cart by id)
+   * ``` { "quantity": 3, "description": "Lorem Ipsum." } ```
 
 **4. DELETE**
-* `/note/:id` (Delete note by id)
-* `/category/:id` (Delete category by id)
+* `/user/:id` (Delete User by id)
+* `/category/:id` (Delete Category by id)
+* `/restaurant/:id` (Delete Restaurant by id)
+* `/item/:id` (Delete Item by id)
+* `/review/:id` (Delete Review by id)
+* `/cart/:id` (Delete Cart by id)
