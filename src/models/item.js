@@ -88,6 +88,14 @@ Item.getItemById = (id) => {
                 resolve(item)
             })
         })
+    }).then((item) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from reviews where item_id=?', [id], (err, reviews) => {
+                if (err) reject(err)
+                item.reviews = reviews
+                resolve(item)
+            })
+        })
     })
 }
 
