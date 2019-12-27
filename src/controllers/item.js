@@ -20,7 +20,7 @@ module.exports.list_all_item = async (req, res) => {
         })
 
         var limit = skip + ',' + numPerPage
-        return redis.get(`all_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
+        return redis.get(`allac_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
             if (data) {
                 const responseJSON = JSON.parse(data);
                 return res.status(200).send({
@@ -47,7 +47,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`all_item_page:${page}_limit:${numPerPage}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ success: true, source: 'Database Query', data: x_data })
+                    return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });
@@ -88,7 +88,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ success: true, source: 'Database Query', data: x_data })
+                    return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });
@@ -105,11 +105,16 @@ module.exports.show_item = async (req, res) => {
             const resultJSON = JSON.parse(data);
             return res.status(200).json(resultJSON);
         } else {
-            await Item.getItemById(id).then(async (item) => {
-                await Restaurant.getRestaurantById(item[0].restaurant_id).then(async (restaurant) => {
-                    await Item.getItemByRestaurant(restaurant[0].id).then((rows) => {
-                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, message: 'OK', dataSource: 'Redis Cache', item, restaurant, showcase: rows }))
-                        return res.status(200).json({ status: 200, message: 'OK', dataSource: 'Database query', item, restaurant, showcase: rows })
+            await Item.getItemById(id).then(async (data) => {
+                await Restaurant.getRestaurantById(data.item[0].restaurant_id).then(async (restaurant) => {
+                    var cat = []
+                    for (var i = 0; i < data.categories.length; i++) {
+                        cat.push(data.categories[i].category_id)
+                    }
+                    await Item.getItemByParams({ cat: cat.join(','), sort: "rating", type: "desc" }).then((rows) => {
+                        // console.log(rows)
+                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, message: 'OK', dataSource: 'Redis Cache', data, restaurant, showcase: rows }))
+                        return res.status(200).json({ status: 200, message: 'OK', dataSource: 'Database query', data, restaurant, showcase: rows })
                     })
                 })
             })

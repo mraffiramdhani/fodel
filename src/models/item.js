@@ -15,10 +15,23 @@ var Item = function Item(item) {
 
 Item.getAllItem = (limit) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from items limit ' + limit, (err, res, fields) => {
+        conn.query('select * from items i limit ' + limit, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const image = new Promise((resolve, reject) => {
+                conn.query('select filename from item_images where item_id=?', [data[i].id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await image.then((result) => {
+                data[i].images = result
+            })
+        }
+        return data
     })
 }
 
@@ -44,7 +57,7 @@ Item.getNumRowsParam = (params) => {
         + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
         + fixedSort + ` `
 
-    console.log(sql)
+    // console.log(sql)
     return new Promise((resolve, reject) => {
         conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)
@@ -58,6 +71,22 @@ Item.getItemById = (id) => {
         conn.query('select * from items where id=?', id, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
+        })
+    }).then((item) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from categories c inner join item_category ic on c.id = ic.category_id where ic.item_id=?',
+                [id], (err, categories) => {
+                    if (err) reject(err)
+                    resolve({ item, categories })
+                })
+        })
+    }).then((item) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from item_images where item_id=?', [id], (err, images) => {
+                if (err) reject(err)
+                item.images = images
+                resolve(item)
+            })
         })
     })
 }
@@ -86,12 +115,25 @@ Item.getItemByParams = (params, limit = null) => {
         + fixedSort + ` `
         + ((limit) ? `limit ` + limit : ``)
 
-    console.log(sql)
+    // console.log(sql)
     return new Promise((resolve, reject) => {
         conn.query(sql, params, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const image = new Promise((resolve, reject) => {
+                conn.query('select filename from item_images where item_id=?', [data[i].id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await image.then((result) => {
+                data[i].images = result
+            })
+        }
+        return data
     })
 }
 
@@ -131,7 +173,7 @@ Item.createItem = (newItem) => {
             })
         })
     }).catch((errLog) => {
-        console.log(errLog)
+        // console.log(errLog)
         return new Error(errLog)
     })
 }
