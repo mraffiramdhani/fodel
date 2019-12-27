@@ -20,4 +20,4 @@ module.exports.uploads = multer({
         }
         cb(null, true);
     }
-}).single('image')
+}).array('image', 10)

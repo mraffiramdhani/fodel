@@ -51,11 +51,11 @@ module.exports = (app) => {
         .delete(auth, hasRole('administrator'), Restaurants.delete_restaurant)
 
     app.route('/item')
-        .get(auth, Items.list_all_item)
+        .get(Items.list_all_item)
         .post(auth, hasRole(['administrator', 'restaurant']), Items.create_item)
 
     app.route('/item/:id')
-        .get(auth, Items.show_item)
+        .get(Items.show_item)
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
         .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
 

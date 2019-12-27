@@ -8,8 +8,8 @@ const Item = require('../models/item'),
 // working as intended
 module.exports.list_all_item = async (req, res) => {
     const { name, rating, min_price, max_price, sort, type, cat } = req.query
-    var numRows, queryPagination
-    var numPerPage = parseInt(req.query.npp, 10) || 10
+    var numRows
+    var numPerPage = parseInt(req.query.max_item, 10) || 10
     var page = parseInt(req.query.page) || 0
     var numPages
     var skip = page * numPerPage
@@ -18,7 +18,6 @@ module.exports.list_all_item = async (req, res) => {
         await Item.getNumRows().then((results) => {
             numRows = results[0].numRows
             numPages = Math.ceil(numRows / numPerPage)
-            console.log('number of all items:', numRows);
         })
 
         var limit = skip + ',' + numPerPage
@@ -58,8 +57,6 @@ module.exports.list_all_item = async (req, res) => {
         await Item.getNumRowsParam(req.query).then((results) => {
             numRows = results[0].numRows
             numPages = Math.ceil(numRows / numPerPage)
-            console.log('number of indexed items:', numRows);
-            console.log('number of indexed pages:', numPages);
         })
 
         var limit = numRows >= 10 ? skip + ',' + numPerPage : null
@@ -124,7 +121,13 @@ module.exports.create_item = async (req, res) => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
-        req.body.image = req.file.filename
+
+        const images = []
+        const files = req.files
+        for (var i = 0; i < files.length; i++) {
+            images.push(files[i])
+        }
+        req.body.image = images
         await Item.createItem(new Item(req.body)).then((item) => {
             return res.json({
                 success: true,
@@ -141,7 +144,12 @@ module.exports.update_item = async (req, res) => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
-        req.body.image = req.file.filename
+        const images = []
+        const files = req.files
+        for (var i = 0; i < files.length; i++) {
+            images.push(files[i])
+        }
+        req.body.image = images
         await Item.updateItem(id, new Item(req.body)).then((data) => {
             return res.json({
                 success: true,

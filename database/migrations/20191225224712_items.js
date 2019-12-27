@@ -5,7 +5,6 @@ exports.up = function (knex) {
         table.string('name')
         table.decimal('price', 12, 2)
         table.text('description')
-        table.string('image', 255)
         table.integer('restaurant_id')
         table.timestamps()
     });

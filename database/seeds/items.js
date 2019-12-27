@@ -20,7 +20,6 @@ let createItem = (knex, id, restaurant_id) => {
     name: faker.lorem.sentence(2, 5),
     price: faker.random.number(2000000),
     description: faker.lorem.paragraphs(3),
-    image: faker.image.food(512, 512),
     restaurant_id,
     created_at: new Date(),
     updated_at: new Date()
