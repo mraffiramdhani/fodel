@@ -148,7 +148,20 @@ module.exports.create_item = async (req, res) => {
 // working asn intended
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
-    multer.uploads(req, res, async () => {
+    await Item.updateItem(id, new Item(req.body)).then((result) => {
+        return res.json({
+            status: 200,
+            message: "Item Updated Successfuly.",
+            success: true,
+            result
+        })
+    })
+}
+
+module.exports.update_item_images = (req, res) => {
+    const { id } = req.params
+
+    multer.uploadImages(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
@@ -157,14 +170,16 @@ module.exports.update_item = async (req, res) => {
         for (var i = 0; i < files.length; i++) {
             images.push(files[i])
         }
-        req.body.image = images
-        await Item.updateItem(id, new Item(req.body)).then((data) => {
+        await Item.updatedItemImages(id, images).then((result) => {
             return res.json({
+                status: 200,
+                message: "Item Images Updated Successfuly.",
                 success: true,
-                data
+                result
             })
         })
     })
+
 }
 
 // working as intended

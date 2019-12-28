@@ -203,7 +203,7 @@ Item.createItem = (newItem) => {
 }
 
 Item.updateItem = (id, data) => {
-    const { name, price, description, image, category, updated_at } = data
+    const { name, price, description, category, updated_at } = data
 
     return new Promise((resolve, reject) => {
         conn.query('update items set name=?, price=?, description=?, updated_at=? where id=?',
@@ -222,23 +222,35 @@ Item.updateItem = (id, data) => {
         return new Promise((resolve, reject) => {
             conn.query(sql + add_str.join(','), (error, rows) => {
                 if (error) reject(error)
-                resolve({ rows, data })
+                data.response = rows
+                resolve(data)
             })
         })
     }).then((data) => {
-        var sql = `delete from item_images where item_id=${id};insert into item_images(item_id, filename) values`
-        var arr_img = []
-        for (var i = 0; i < image.length; i++) {
-            arr_img.push(`(${id}, '${image[i].filename}')`)
-        }
+        var sql = 'select * from items where id=?'
         return new Promise((resolve, reject) => {
-            conn.query(sql + arr_img.join(','), (error, result) => {
+            conn.query(sql, [id], (error, item) => {
                 if (error) reject(error)
-                resolve({ data, result })
+                data.item = item
+                resolve(data)
             })
         })
     }).catch((errLog) => {
         return new Error(errLog)
+    })
+}
+
+Item.updatedItemImages = (id, data) => {
+    var sql = `delete from item_images where item_id=${id};insert into item_images(item_id, filename) values`
+    var arr_img = []
+    for (var i = 0; i < data.length; i++) {
+        arr_img.push(`(${id}, '${data[i].filename}')`)
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql + arr_img.join(','), (error, result) => {
+            if (error) reject(error)
+            resolve(result)
+        })
     })
 }
 

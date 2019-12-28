@@ -62,6 +62,9 @@ module.exports = (app) => {
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
         .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
 
+    app.route('/item/:id/images')
+        .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item_images)
+
     app.route('/item/:id/review')
         .get(Reviews.list_item_review)
         .post(auth, hasRole('customer'), Reviews.add_item_review)
