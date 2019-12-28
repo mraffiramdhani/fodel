@@ -34,6 +34,7 @@ exports.seed = function (knex) {
         records.push(createRecord(knex, i + 1, rest_user[i]))
       }
 
+      console.log('restaurant seed')
       return Promise.all(records)
     });
 };

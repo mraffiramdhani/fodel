@@ -18,6 +18,7 @@ exports.seed = (knex) => {
         records.push(createRecord(knex, i, roles[i - 1], roles[i - 1]))
       }
 
+      console.log('roles seed')
       return Promise.all(records)
     });
 };

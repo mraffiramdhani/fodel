@@ -5,8 +5,11 @@ exports.up = function (knex) {
         table.string('name')
         table.string('username')
         table.string('password')
-        table.integer('role_id')
+        table.integer('role_id').unsigned()
         table.timestamps()
+
+        table.unique('username')
+        table.foreign('role_id').references('roles.id')
     });
 };
 

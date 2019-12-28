@@ -27,22 +27,15 @@ let createRecord = (knex, item_id, user_id) => {
 
 exports.seed = function (knex) {
   // Deletes ALL existing entries
+  console.log('reviews seed')
   return knex('reviews').del()
     .then(function () {
       let records = []
       let user = range(6, 10)
       // Inserts seed entries
       for (let i = 0; i <= user.length; i++) {
-        for (let j = 1; j <= 50; j++) {
+        for (let j = 1; j <= 40; j++) {
           records.push(createRecord(knex, j, user[i]))
-          // let id = j
-          // if (i > 0) id = `${((j == 10) ? i + 1 + `0` : i)}` + `${((j == 10) ? `` : j)}`
-          // records.push(createItem(knex, id, rest_user[i]))
-          // let ran_count = getRandomInt(1, 10)
-          // for (let k = 0; k < ran_count; k++) {
-          // records.push(createRel(knex, id, k + 1))
-          // }
-
         }
       }
       return Promise.all(records)

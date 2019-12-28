@@ -7,8 +7,10 @@ exports.up = function (knex) {
         table.string('longitude')
         table.string('latitude')
         table.text('description')
-        table.integer('user_id')
+        table.integer('user_id').unsigned()
         table.timestamps()
+
+        table.foreign('user_id').references('users.id')
     });
 };
 

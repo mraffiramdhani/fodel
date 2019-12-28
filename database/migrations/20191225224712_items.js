@@ -5,8 +5,10 @@ exports.up = function (knex) {
         table.string('name')
         table.decimal('price', 12, 2)
         table.text('description')
-        table.integer('restaurant_id')
+        table.integer('restaurant_id').unsigned()
         table.timestamps()
+
+        table.foreign('restaurant_id').references('restaurants.id')
     });
 };
 

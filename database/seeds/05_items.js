@@ -50,13 +50,10 @@ exports.seed = function (knex) {
           let id = j
           if (i > 0) id = `${((j == 10) ? i + 1 + `0` : i)}` + `${((j == 10) ? `` : j)}`
           records.push(createItem(knex, id, rest_user[i]))
-          let ran_count = getRandomInt(1, 10)
-          for (let k = 0; k < ran_count; k++) {
-            records.push(createRel(knex, id, k + 1))
-          }
-
         }
       }
+
+      console.log('items seed')
       return Promise.all(records)
     });
 };
