@@ -11,15 +11,16 @@ module.exports.list_all_restaurant = async (req, res) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return res.status(200).send({
+                status: 200,
+                message: "OK",
                 success: true,
                 source: 'Redis Cache',
                 data: resultJSON
             });
         } else {
             const data = await Restaurant.getAllRestaurant()
-            redis.setex('index_restaurant', 600, JSON.stringify({ ...data }))
-            var x_data = { ...data }
-            return res.status(200).send({ success: true, source: 'Database Query', data: x_data })
+            redis.setex('index_restaurant', 600, JSON.stringify(data))
+            return res.status(200).send({ status: 200, message: "OK", success: true, source: 'Database Query', data: data })
         }
     })
 }
@@ -27,14 +28,31 @@ module.exports.list_all_restaurant = async (req, res) => {
 // working as intended
 module.exports.show_restaurant = async (req, res) => {
     const { id } = req.params
-    await Restaurant.getRestaurantById(id).then(async (data) => {
-        await Item.getItemByRestaurant(id).then((item) => {
-            res.send({
+    return redis.get(`show_rest_id:${id}`, async (ex, data) => {
+        if (data) {
+            const responseJSON = JSON.parse(data)
+            return res.send({
+                status: 200,
+                message: "OK",
                 success: true,
-                data,
-                item
+                dataSource: 'Redis Cache',
+                data: responseJSON
             })
-        })
+        } else {
+            await Restaurant.getRestaurantById(id).then(async (data) => {
+                await Item.getItemByRestaurant(id).then((items) => {
+                    data[0].items = items
+                    redis.setex(`show_rest_id:${id}`, 600, JSON.stringify(data))
+                    res.send({
+                        status: 200,
+                        message: "OK",
+                        success: true,
+                        dataSource: 'Database Query',
+                        data
+                    })
+                })
+            })
+        }
     })
 }
 

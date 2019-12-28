@@ -12,15 +12,15 @@ module.exports.list_all_users = async (req, res) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return res.status(200).send({
-                success: true,
-                source: 'Redis Cache',
+                status: 200,
+                message: 'OK',
+                dataSource: 'Redis Cache',
                 data: resultJSON
             });
         } else {
             const data = await User.getAllUser()
-            redis.setex('index_user', 600, JSON.stringify({ ...data }))
-            var x_data = { ...data }
-            return res.status(200).send({ success: true, source: 'Database Query', data: x_data })
+            redis.setex('index_user', 600, JSON.stringify(data))
+            return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database Query', data })
         }
     })
 }

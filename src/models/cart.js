@@ -16,6 +16,19 @@ Cart.getCartByUserId = (userId) => {
             if (err) reject(err)
             resolve(res)
         })
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const image = new Promise((resolve, reject) => {
+                conn.query('select filename from item_images where item_id=?', [data[i].item_id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await image.then((result) => {
+                data[i].images = result
+            })
+        }
+        return data
     })
 }
 

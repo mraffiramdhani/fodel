@@ -53,7 +53,6 @@ REDIS_PORT=6379
 * `/item/:id` (Get Item by ID)
 * `/item/:id/review` (Get Item Review by ID)
 * `/cart`
-* `/categories`
 
 
 **2. POST**

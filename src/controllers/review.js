@@ -6,7 +6,7 @@ var Review = require('../models/review')
 module.exports.list_item_review = async (req, res) => {
     const { id } = req.params
     await Review.getItemReview(id).then((result) => {
-        res.send({ success: true, result })
+        res.send({ status: 200, message: "OK", success: true, result })
     })
 }
 
@@ -14,7 +14,7 @@ module.exports.list_item_review = async (req, res) => {
 module.exports.list_user_review = async (req, res) => {
     const { id } = req.headers.auth_token
     await Review.getUserReview(id).then((result) => {
-        res.send({ success: true, result })
+        res.send({ status: 200, message: "OK", success: true, result })
     })
 }
 

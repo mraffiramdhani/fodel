@@ -20,7 +20,7 @@ module.exports.list_all_item = async (req, res) => {
         })
 
         var limit = skip + ',' + numPerPage
-        return redis.get(`allac_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
+        return redis.get(`all_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
             if (data) {
                 const responseJSON = JSON.parse(data);
                 return res.status(200).send({
@@ -47,7 +47,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`all_item_page:${page}_limit:${numPerPage}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database query', data: x_data })
+                    return res.status(200).send({ status: 200, message: 'OK', success: true, dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });
@@ -72,9 +72,9 @@ module.exports.list_all_item = async (req, res) => {
                     data: responseJSON
                 });
             } else {
-                await Item.getItemByParams(req.query, limit).then((results) => {
+                await Item.getItemByParams(req.query, limit).then((items) => {
                     var responsePayload = {
-                        results
+                        items
                     }
                     if (page < numPages) {
                         responsePayload.pagination = {
@@ -88,7 +88,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database query', data: x_data })
+                    return res.status(200).send({ status: 200, message: 'OK', success: true, dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });

@@ -9,8 +9,8 @@ module.exports = (app) => {
         Reviews = require('../controllers/review');
     const { auth, hasRole } = require('../middleware')
 
-    app.route('/').get(auth, (req, res) => {
-        res.send(app.client)
+    app.route('/').get((req, res) => {
+        res.send('Hello World')
     })
 
     app.route('/register')
@@ -34,7 +34,7 @@ module.exports = (app) => {
         .get(auth, Users.logout_user)
 
     app.route('/category')
-        .get(auth, Categories.list_all_category)
+        .get(Categories.list_all_category)
         .post(auth, hasRole(['administrator', 'restaurant']), Categories.create_category)
 
     app.route('/category/:id')
@@ -42,11 +42,11 @@ module.exports = (app) => {
         .delete(auth, hasRole(['administrator', 'restaurant']), Categories.delete_category)
 
     app.route('/restaurant')
-        .get(auth, Restaurants.list_all_restaurant)
+        .get(Restaurants.list_all_restaurant)
         .post(auth, hasRole('administrator'), Restaurants.create_restaurant)
 
     app.route('/restaurant/:id')
-        .get(auth, Restaurants.show_restaurant)
+        .get(Restaurants.show_restaurant)
         .patch(auth, hasRole('administrator'), Restaurants.update_restaurant)
         .delete(auth, hasRole('administrator'), Restaurants.delete_restaurant)
 
@@ -60,7 +60,7 @@ module.exports = (app) => {
         .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
 
     app.route('/item/:id/review')
-        .get(auth, Reviews.list_item_review)
+        .get(Reviews.list_item_review)
         .post(auth, hasRole('customer'), Reviews.add_item_review)
 
     app.route('/review/:id')

@@ -8,6 +8,8 @@ module.exports.list_user_cart = async (req, res) => {
 
     const data = await Cart.getCartByUserId(id)
     res.send({
+        status: 200,
+        message: "OK",
         success: true,
         data
     })

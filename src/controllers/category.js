@@ -11,8 +11,8 @@ module.exports.list_all_category = (req, res) => {
             return res.status(200).json(resultJSON);
         } else {
             const newData = await Category.getAllCategories()
-            redis.setex('all_cat', 600, JSON.stringify({ source: 'Redis Cache', data: newData, }))
-            return res.status(200).json({ source: 'Database query', data: newData, })
+            redis.setex('all_cat', 600, JSON.stringify({ status: 200, message: "OK", source: 'Redis Cache', data: newData, }))
+            return res.status(200).json({ status: 200, message: "OK", source: 'Database query', data: newData, })
         }
     })
 }
