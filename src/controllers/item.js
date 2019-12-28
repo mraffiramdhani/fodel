@@ -123,7 +123,7 @@ module.exports.show_item = async (req, res) => {
 }
 
 module.exports.create_item = async (req, res) => {
-    multer.uploads(req, res, async () => {
+    multer.uploadImages(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
@@ -134,10 +134,12 @@ module.exports.create_item = async (req, res) => {
             images.push(files[i])
         }
         req.body.image = images
-        await Item.createItem(new Item(req.body)).then((item) => {
+        await Item.createItem(new Item(req.body)).then((data) => {
             return res.json({
+                status: 200,
+                message: "OK",
                 success: true,
-                item
+                data
             })
         })
     })

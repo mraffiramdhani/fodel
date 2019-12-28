@@ -58,7 +58,7 @@ module.exports.show_restaurant = async (req, res) => {
 
 // working as intended
 module.exports.create_restaurant = async (req, res) => {
-    multer.uploads(req, res, async () => {
+    multer.uploadLogo(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
@@ -66,6 +66,8 @@ module.exports.create_restaurant = async (req, res) => {
         await Restaurant.createRestaurant(new Restaurant(req.body)).then(async (result) => {
             await Restaurant.getRestaurantById(result.insertId).then((data) => {
                 res.send({
+                    status: 200,
+                    message: "OK",
                     success: true,
                     result,
                     data
@@ -79,7 +81,7 @@ module.exports.create_restaurant = async (req, res) => {
 module.exports.update_restaurant = async (req, res) => {
     const { id } = req.params
 
-    multer.uploads(req, res, async (err) => {
+    multer.uploadLogo(req, res, async (err) => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }

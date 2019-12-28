@@ -52,7 +52,7 @@ module.exports = (app) => {
 
     app.route('/item')
         .get(Items.list_all_item)
-        .post(auth, hasRole(['administrator', 'restaurant']), Items.create_item)
+        .post(auth, hasRole('restaurant'), Items.create_item)
 
     app.route('/item/:id')
         .get(Items.show_item)

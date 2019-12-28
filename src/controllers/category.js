@@ -27,12 +27,12 @@ module.exports.create_category = async (req, res) => {
             message: "Please provide a valid data"
         })
     } else {
-        const response = await Category.createCategory(new_category)
-        const data = await Category.getAllCategories()
+        const result = await Category.createCategory(new_category)
+        result.categories = await Category.getAllCategories()
         res.send({
-            status: true,
-            response,
-            data
+            status: 200,
+            message: "OK",
+            result
         })
     }
 }

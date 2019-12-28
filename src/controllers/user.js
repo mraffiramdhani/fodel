@@ -47,9 +47,10 @@ module.exports.register_user = async (req, res) => {
                     console.log('res', result)
                 } else {
                     res.send({
+                        status: 200,
+                        message: "OK",
                         success: true,
                         result,
-                        data,
                         token
                     })
                 }
@@ -81,8 +82,9 @@ module.exports.login_user = async (req, res) => {
                         res.send(err)
                     } else {
                         res.send({
+                            status: 200,
+                            message: "OK",
                             success: true,
-                            result,
                             token
                         })
                     }
@@ -114,7 +116,7 @@ module.exports.create_user = async (req, res) => {
     } else {
         await User.createUser(new_user).then(async (result) => {
             await User.getUserById(result.insertId).then((data) => {
-                res.send({ success: true, result, data })
+                res.send({ status: 200, message: "OK", success: true, result, data })
             })
         })
     }

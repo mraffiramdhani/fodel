@@ -25,7 +25,8 @@ module.exports.add_item_review = async (req, res) => {
     const item_id = req.params.id
     await Review.createItemReview(id, new Review({ rating, review, item_id })).then(async (result) => {
         await Review.getReviewById(result.insertId).then((data) => {
-            res.send({ success: true, result, data })
+            result.data = data
+            res.send({ status: 200, message: "OK", success: true, result })
         })
     })
 }

@@ -22,6 +22,8 @@ module.exports.add_item_to_cart = async (req, res) => {
     const response = await Cart.addItemtoCart(id, new Cart(req.body))
     const data = await Cart.getCartByUserId(id)
     res.send({
+        status: 200,
+        message: "OK",
         success: true,
         response,
         data

@@ -155,33 +155,49 @@ Item.createItem = (newItem) => {
                 if (err) reject(err)
                 resolve(res)
             })
-    }).then((data) => {
+    }).then((result) => {
         const cat = category.split(',')
         var sql = 'insert into item_category(item_id, category_id) values'
         var add_str = []
         for (var i = 0; i < cat.length; i++) {
-            add_str.push(`(${data.insertId}, ${cat[i]})`)
+            add_str.push(`(${result.insertId}, ${cat[i]})`)
         }
         return new Promise((resolve, reject) => {
-            conn.query(sql + add_str.join(','), (error, rows) => {
+            conn.query(sql + add_str.join(','), (error, response) => {
                 if (error) reject(error)
-                resolve({ rows, data })
+                resolve({ result, response: [response] })
             })
         })
-    }).then((data) => {
+    }).then((result) => {
         var sql = 'insert into item_images(item_id, filename) values'
         var arr_img = []
         for (var i = 0; i < image.length; i++) {
-            arr_img.push(`(${data.data.insertId}, '${image[i].filename}')`)
+            arr_img.push(`(${result.result.insertId}, '${image[i].filename}')`)
         }
         return new Promise((resolve, reject) => {
-            conn.query(sql + arr_img.join(','), (error, result) => {
+            conn.query(sql + arr_img.join(','), (error, response) => {
                 if (error) reject(error)
-                resolve({ data, result })
+                result.response[1] = response
+                resolve(result)
+            })
+        })
+    }).then((result) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from items where id=?', [result.result.insertId], (error, item) => {
+                if (error) reject(error)
+                result.item = item
+                resolve(result)
+            })
+        })
+    }).then((result) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select filename from item_images where item_id=?', [result.result.insertId], (error, images) => {
+                if (error) reject(error)
+                result.item[0].images = images
+                resolve(result)
             })
         })
     }).catch((errLog) => {
-        // console.log(errLog)
         return new Error(errLog)
     })
 }
