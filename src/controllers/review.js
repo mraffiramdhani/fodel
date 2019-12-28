@@ -5,16 +5,16 @@ var Review = require('../models/review')
 //working as intended
 module.exports.list_item_review = async (req, res) => {
     const { id } = req.params
-    await Review.getItemReview(id).then((result) => {
-        res.send({ status: 200, message: "OK", success: true, result })
+    await Review.getItemReview(id).then((data) => {
+        res.send({ status: 200, success: true, message: "Data Found", data })
     })
 }
 
 //working as intended
 module.exports.list_user_review = async (req, res) => {
     const { id } = req.headers.auth_token
-    await Review.getUserReview(id).then((result) => {
-        res.send({ status: 200, message: "OK", success: true, result })
+    await Review.getUserReview(id).then((data) => {
+        res.send({ status: 200, success: true, message: "Data Found", data })
     })
 }
 
@@ -24,9 +24,8 @@ module.exports.add_item_review = async (req, res) => {
     const { id } = req.headers.auth_token
     const item_id = req.params.id
     await Review.createItemReview(id, new Review({ rating, review, item_id })).then(async (result) => {
-        await Review.getReviewById(result.insertId).then((data) => {
-            result.data = data
-            res.send({ status: 200, message: "Item Added Successfuly.", success: true, result })
+        await Review.getItemReview(item_id).then((data) => {
+            res.send({ status: 200, success: true, message: "Item Review Added Successfuly.", data })
         })
     })
 }
@@ -35,10 +34,9 @@ module.exports.add_item_review = async (req, res) => {
 module.exports.update_item_review = async (req, res) => {
     const { id } = req.params
     const userId = req.headers.auth_token.id
-    console.log(userId)
     await Review.updateItemReview(id, new Review(req.body), userId).then(async (result) => {
         await Review.getReviewById(id).then((data) => {
-            res.send({ success: true, result, data })
+            res.send({ status: 200, success: true, message: "Item Review Updated Successfuly.", data })
         })
     }).catch((error) => {
         console.log(error)
@@ -50,6 +48,6 @@ module.exports.update_item_review = async (req, res) => {
 module.exports.delete_item_review = async (req, res) => {
     const { id } = req.params
     await Review.deleteItemReview(id).then((result) => {
-        res.send({ success: true, result })
+        res.send({ status: 200, success: true, message: "Item Review Removed Successfuly.", data: {} })
     })
 }

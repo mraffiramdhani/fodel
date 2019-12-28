@@ -15,7 +15,8 @@ Review.getItemReview = (itemId) => {
         conn.query('select * from reviews where item_id=?',
             [itemId], (err, res) => {
                 if (err) reject(err)
-                resolve(res)
+                var requests = [{ reviews: res }]
+                resolve({ requests })
             })
     })
 }
@@ -25,7 +26,8 @@ Review.getUserReview = (userId) => {
         conn.query('select * from reviews where user_id=?',
             [userId], (err, res) => {
                 if (err) reject(err)
-                resolve(res)
+                var requests = [{ reviews: res }]
+                resolve({ requests })
             })
     })
 }
@@ -34,7 +36,8 @@ Review.getReviewById = (id) => {
     return new Promise((resolve, reject) => {
         conn.query('select * from reviews where id=?', [id], (err, res) => {
             if (err) reject(err)
-            resolve(res)
+            var requests = [{ reviews: res }]
+            resolve({ requests })
         })
     })
 }
