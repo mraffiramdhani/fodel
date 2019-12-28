@@ -47,8 +47,11 @@ module.exports = (app) => {
 
     app.route('/restaurant/:id')
         .get(Restaurants.show_restaurant)
-        .patch(auth, hasRole('administrator'), Restaurants.update_restaurant)
-        .delete(auth, hasRole('administrator'), Restaurants.delete_restaurant)
+        .patch(auth, hasRole(['administrator', 'restaurant']), Restaurants.update_restaurant)
+        .delete(auth, hasRole(['administrator', 'restaurant']), Restaurants.delete_restaurant)
+
+    app.route('/restaurant/:id/logo')
+        .patch(auth, hasRole(['administrator', 'restaurant']), Restaurants.update_restaurant_logo)
 
     app.route('/item')
         .get(Items.list_all_item)

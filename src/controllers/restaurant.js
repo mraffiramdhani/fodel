@@ -81,18 +81,27 @@ module.exports.create_restaurant = async (req, res) => {
 module.exports.update_restaurant = async (req, res) => {
     const { id } = req.params
 
+    console.log(req.body)
+    await Restaurant.updateRestaurant(id, req.body).then(async (result) => {
+        await Restaurant.getRestaurantById(id).then((data) => {
+            res.send({ status: 200, message: "Restaurant Updated Successfuly.", success: true, result, data })
+        })
+    })
+}
+
+// working as intended
+module.exports.update_restaurant_logo = async (req, res) => {
+    const { id } = req.params
     multer.uploadLogo(req, res, async (err) => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
-        req.body.image = req.file.filename
-        await Restaurant.updateRestaurant(id, new Restaurant(req.body)).then(async (result) => {
-            await Restaurant.getRestaurantById(id).then((data) => {
-                res.send({ success: true, result, data })
-            })
+        await Restaurant.updateRestaurant(id, { logo: req.file.filename }).then((result) => {
+            res.send({ status: 200, message: "Restaurant Logo Updated Successfuly.", success: true, result })
         })
     })
 }
+
 
 //working as intended
 module.exports.delete_restaurant = async (req, res) => {

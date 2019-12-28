@@ -41,11 +41,13 @@ module.exports.create_category = async (req, res) => {
 module.exports.update_category = async (req, res) => {
     const { id } = req.params
 
-    const response = await Category.updateCategory(id, new Category(req.body))
+    const result = await Category.updateCategory(id, new Category(req.body))
     const data = await Category.getAllCategories()
     res.send({
-        status: true,
-        response,
+        status: 200,
+        message: "OK",
+        success: true,
+        result,
         data
     })
 }

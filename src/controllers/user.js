@@ -135,7 +135,7 @@ module.exports.update_user = async (req, res) => {
     } else {
         await User.updateUser(id, new_user).then(async (result) => {
             await User.getUserById(id).then((data) => {
-                res.send({ success: true, result, data })
+                res.send({ status: 200, message: "OK", success: true, result, data })
             })
         })
     }

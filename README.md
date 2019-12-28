@@ -88,7 +88,10 @@ REDIS_PORT=6379
    * ``` { "name": "Category8" } ```
 
 * `/restaurant/:id` (Update Restaurant by id)
-   * ``` { "name": "Joe's Pizza", "logo": "img.png", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
+   * ``` { "name": "Joe's Pizza", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
+
+* `/restaurant/:id/logo` (Update Restaurant Logo by id)
+   * ``` { "logo": "img.png" } ```
 
 * `/item/:id` (Update Item by id)
    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3 } ```

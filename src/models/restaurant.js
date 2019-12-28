@@ -46,10 +46,9 @@ Restaurant.createRestaurant = (newData) => {
 }
 
 Restaurant.updateRestaurant = (id, data) => {
-    const { name, logo, longitude, latitude, description, user_id, updated_at } = data
     return new Promise((resolve, reject) => {
-        conn.query('update restaurants set name=?, logo=?, longitude=?, latitude=?, description=?, user_id=?, updated_at=? where id=?',
-            [name, logo, longitude, latitude, description, user_id, updated_at, id],
+        conn.query('update restaurants set ? where id=?',
+            [data, id],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)
