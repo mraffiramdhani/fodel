@@ -26,7 +26,7 @@ module.exports.add_item_review = async (req, res) => {
     await Review.createItemReview(id, new Review({ rating, review, item_id })).then(async (result) => {
         await Review.getReviewById(result.insertId).then((data) => {
             result.data = data
-            res.send({ status: 200, message: "OK", success: true, result })
+            res.send({ status: 200, message: "Item Added Successfuly.", success: true, result })
         })
     })
 }
@@ -34,10 +34,15 @@ module.exports.add_item_review = async (req, res) => {
 // working as intended
 module.exports.update_item_review = async (req, res) => {
     const { id } = req.params
-    await Review.updateItemReview(id, new Review(req.body)).then(async (result) => {
+    const userId = req.headers.auth_token.id
+    console.log(userId)
+    await Review.updateItemReview(id, new Review(req.body), userId).then(async (result) => {
         await Review.getReviewById(id).then((data) => {
             res.send({ success: true, result, data })
         })
+    }).catch((error) => {
+        console.log(error)
+        res.end(error)
     })
 }
 

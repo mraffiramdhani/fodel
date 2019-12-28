@@ -16,9 +16,9 @@ var Restaurant = function Restaurant(data) {
 
 Restaurant.getAllRestaurant = () => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from restaurants', (err, res, fields) => {
+        conn.query('select * from restaurants', (err, requests, fields) => {
             if (err) reject(err)
-            resolve(res)
+            resolve({ requests })
         })
     })
 }

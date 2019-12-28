@@ -8,8 +8,8 @@ exports.up = function (knex) {
         table.integer('user_id').unsigned()
         table.timestamps()
 
-        table.foreign('item_id').references('items.id')
-        table.foreign('user_id').references('users.id')
+        table.foreign('item_id').references('items.id').onDelete('cascade').onUpdate('cascade')
+        table.foreign('user_id').references('users.id').onDelete('cascade').onUpdate('cascade')
     });
 };
 

@@ -5,7 +5,7 @@ exports.up = function (knex) {
         table.integer('item_id').unsigned()
         table.string('filename')
 
-        table.foreign('item_id').references('items.id')
+        table.foreign('item_id').references('items.id').onDelete('cascade').onUpdate('cascade')
     });
 };
 

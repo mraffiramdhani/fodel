@@ -9,7 +9,7 @@ exports.up = function (knex) {
         table.timestamps()
 
         table.unique('username')
-        table.foreign('role_id').references('roles.id')
+        table.foreign('role_id').references('roles.id').onDelete('cascade').onUpdate('cascade')
     });
 };
 

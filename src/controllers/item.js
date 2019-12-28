@@ -25,16 +25,15 @@ module.exports.list_all_item = async (req, res) => {
                 const responseJSON = JSON.parse(data);
                 return res.status(200).send({
                     status: 200,
-                    message: 'OK',
                     success: true,
+                    message: 'Data Found',
                     dataSource: 'Redis Cache',
                     data: responseJSON
                 });
             } else {
                 await Item.getAllItem(limit).then((items) => {
-                    var responsePayload = {
-                        items
-                    }
+                    var requests = [{ items }]
+                    var responsePayload = { requests }
                     if (page < numPages) {
                         responsePayload.pagination = {
                             current: page + 1,
@@ -47,7 +46,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`all_item_page:${page}_limit:${numPerPage}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, message: 'OK', success: true, dataSource: 'Database query', data: x_data })
+                    return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });
@@ -66,16 +65,15 @@ module.exports.list_all_item = async (req, res) => {
                 const responseJSON = JSON.parse(data);
                 return res.status(200).json({
                     status: 200,
-                    message: 'OK',
                     success: true,
+                    message: 'Data Found',
                     dataSource: 'Redis Cache',
                     data: responseJSON
                 });
             } else {
                 await Item.getItemByParams(req.query, limit).then((items) => {
-                    var responsePayload = {
-                        items
-                    }
+                    var requests = [{ items }]
+                    var responsePayload = { requests }
                     if (page < numPages) {
                         responsePayload.pagination = {
                             current: page + 1,
@@ -88,7 +86,7 @@ module.exports.list_all_item = async (req, res) => {
                     }
                     redis.setex(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, 600, JSON.stringify({ ...responsePayload }))
                     var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, message: 'OK', success: true, dataSource: 'Database query', data: x_data })
+                    return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data: x_data })
                 }).catch(function (err) {
                     console.error(err);
                     res.json({ err: err });
@@ -100,21 +98,25 @@ module.exports.list_all_item = async (req, res) => {
 
 module.exports.show_item = async (req, res) => {
     const { id } = req.params
-    return redis.get(`show_item_${id}`, async (error, data) => {
+    return redis.get(`shsow_item_${id}`, async (error, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return res.status(200).json(resultJSON);
         } else {
             await Item.getItemById(id).then(async (data) => {
-                await Restaurant.getRestaurantById(data.item[0].restaurant_id).then(async (restaurant) => {
+                await Restaurant.getRestaurantById(data.requests[0].item[0].restaurant_id).then(async (restaurant) => {
                     var cat = []
-                    for (var i = 0; i < data.categories.length; i++) {
-                        cat.push(data.categories[i].category_id)
+                    for (var i = 0; i < data.requests[0].item[0].categories.length; i++) {
+                        cat.push(data.requests[0].item[0].categories[i].category_id)
                     }
                     await Item.getItemByParams({ cat: cat.join(','), sort: "rating", type: "desc" }).then((rows) => {
-                        // console.log(rows)
-                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, message: 'OK', dataSource: 'Redis Cache', data, restaurant, showcase: rows }))
-                        return res.status(200).json({ status: 200, message: 'OK', dataSource: 'Database query', data, restaurant, showcase: rows })
+                        var arr_req = data.related
+                        arr_req.push({ restaurant })
+                        arr_req.push({ showcase: rows })
+
+                        // console.log(data)
+                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, success: true, message: 'Data Found', dataSource: 'Redis Cache', data }))
+                        return res.status(200).json({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data })
                     })
                 })
             })
@@ -137,8 +139,8 @@ module.exports.create_item = async (req, res) => {
         await Item.createItem(new Item(req.body)).then((data) => {
             return res.json({
                 status: 200,
-                message: "OK",
                 success: true,
+                message: "Item Created Successfuly.",
                 data
             })
         })
@@ -148,12 +150,12 @@ module.exports.create_item = async (req, res) => {
 // working asn intended
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
-    await Item.updateItem(id, new Item(req.body)).then((result) => {
+    await Item.updateItem(id, new Item(req.body)).then((data) => {
         return res.json({
             status: 200,
-            message: "Item Updated Successfuly.",
             success: true,
-            result
+            message: "Item Updated Successfuly.",
+            data
         })
     })
 }
@@ -170,12 +172,14 @@ module.exports.update_item_images = (req, res) => {
         for (var i = 0; i < files.length; i++) {
             images.push(files[i])
         }
-        await Item.updatedItemImages(id, images).then((result) => {
-            return res.json({
-                status: 200,
-                message: "Item Images Updated Successfuly.",
-                success: true,
-                result
+        await Item.updatedItemImages(id, images).then(async (data) => {
+            await Item.getItemById(id).then((requests) => {
+                return res.json({
+                    status: 200,
+                    success: true,
+                    message: "Item Images Updated Successfuly.",
+                    data: requests
+                })
             })
         })
     })
@@ -187,7 +191,9 @@ module.exports.delete_item = async (req, res) => {
     const { id } = req.params
     await Item.deleteItem(id).then((data) => {
         res.send({
-            status: true,
+            status: 200,
+            success: true,
+            message: "Item Removed Successfuly.",
             data
         })
     }).catch((error) => {

@@ -70,7 +70,7 @@ module.exports = (app) => {
         .post(auth, hasRole('customer'), Reviews.add_item_review)
 
     app.route('/review/:id')
-        .patch(auth, hasRole('all'), Reviews.update_item_review)
+        .patch(auth, hasRole('customer'), Reviews.update_item_review)
         .delete(auth, hasRole('all'), Reviews.delete_item_review)
 
     app.route('/cart')

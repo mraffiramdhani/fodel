@@ -77,23 +77,26 @@ Item.getItemById = (id) => {
             conn.query('select * from categories c inner join item_category ic on c.id = ic.category_id where ic.item_id=?',
                 [id], (err, categories) => {
                     if (err) reject(err)
-                    resolve({ item, categories })
+                    var requests = [{ item }]
+                    var related = []
+                    requests[0].item[0].categories = categories
+                    resolve({ requests, related })
                 })
         })
-    }).then((item) => {
+    }).then((requests) => {
         return new Promise((resolve, reject) => {
             conn.query('select * from item_images where item_id=?', [id], (err, images) => {
                 if (err) reject(err)
-                item.images = images
-                resolve(item)
+                requests.requests[0].item[0].images = images
+                resolve(requests)
             })
         })
-    }).then((item) => {
+    }).then((requests) => {
         return new Promise((resolve, reject) => {
             conn.query('select * from reviews where item_id=?', [id], (err, reviews) => {
                 if (err) reject(err)
-                item.reviews = reviews
-                resolve(item)
+                requests.requests[0].item[0].reviews = reviews
+                resolve(requests)
             })
         })
     })
@@ -105,6 +108,19 @@ Item.getItemByRestaurant = (id) => {
             if (err) reject(err)
             resolve(res)
         })
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const image = new Promise((resolve, reject) => {
+                conn.query('select filename from item_images where item_id=?', [data[i].id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await image.then((result) => {
+                data[i].images = result
+            })
+        }
+        return data
     })
 }
 
@@ -155,46 +171,63 @@ Item.createItem = (newItem) => {
                 if (err) reject(err)
                 resolve(res)
             })
-    }).then((result) => {
+    }).then((response) => {
         const cat = category.split(',')
         var sql = 'insert into item_category(item_id, category_id) values'
         var add_str = []
         for (var i = 0; i < cat.length; i++) {
-            add_str.push(`(${result.insertId}, ${cat[i]})`)
+            add_str.push(`(${response.insertId}, ${cat[i]})`)
         }
         return new Promise((resolve, reject) => {
-            conn.query(sql + add_str.join(','), (error, response) => {
+            conn.query(sql + add_str.join(','), (error, resutl) => {
                 if (error) reject(error)
-                resolve({ result, response: [response] })
+                resolve(response)
             })
         })
-    }).then((result) => {
+    }).then((response) => {
         var sql = 'insert into item_images(item_id, filename) values'
         var arr_img = []
         for (var i = 0; i < image.length; i++) {
-            arr_img.push(`(${result.result.insertId}, '${image[i].filename}')`)
+            arr_img.push(`(${response.insertId}, '${image[i].filename}')`)
         }
         return new Promise((resolve, reject) => {
-            conn.query(sql + arr_img.join(','), (error, response) => {
+            conn.query(sql + arr_img.join(','), (error, result) => {
                 if (error) reject(error)
-                result.response[1] = response
-                resolve(result)
+                resolve(response)
             })
         })
-    }).then((result) => {
+    }).then((response) => {
         return new Promise((resolve, reject) => {
-            conn.query('select * from items where id=?', [result.result.insertId], (error, item) => {
+            conn.query('select * from items where id=?', [response.insertId], (error, item) => {
                 if (error) reject(error)
-                result.item = item
-                resolve(result)
+                var requests = [{ item }]
+                resolve(requests)
             })
         })
-    }).then((result) => {
+    }).then((requests) => {
         return new Promise((resolve, reject) => {
-            conn.query('select filename from item_images where item_id=?', [result.result.insertId], (error, images) => {
+            conn.query('select filename from item_images where item_id=?', [requests[0].item[0].id], (error, images) => {
                 if (error) reject(error)
-                result.item[0].images = images
-                resolve(result)
+                requests[0].item[0].images = images
+                resolve(requests)
+            })
+        })
+    }).then((requests) => {
+        const cat = category.split(',')
+        var sql = `select * from categories where id in (${cat})`
+        return new Promise((resolve, reject) => {
+            conn.query(sql, [], (error, categories) => {
+                if (error) reject(error)
+                requests[0].item[0].categories = categories
+                resolve(requests)
+            })
+        })
+    }).then((requests) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from reviews where item_id=?', [requests[0].item[0].id], (error, reviews) => {
+                if (error) reject(error)
+                requests[0].item[0].reviews = reviews
+                resolve({ requests })
             })
         })
     }).catch((errLog) => {
@@ -212,7 +245,7 @@ Item.updateItem = (id, data) => {
                 if (err) reject(err)
                 resolve(res)
             })
-    }).then((data) => {
+    }).then((response) => {
         const cat = category.split(',')
         var sql = `delete from item_category where item_id=${id};insert into item_category(item_id, category_id) values`
         var add_str = []
@@ -222,17 +255,44 @@ Item.updateItem = (id, data) => {
         return new Promise((resolve, reject) => {
             conn.query(sql + add_str.join(','), (error, rows) => {
                 if (error) reject(error)
-                data.response = rows
-                resolve(data)
+                var requests = [{}]
+                resolve({ requests })
             })
         })
-    }).then((data) => {
+    }).then((requests) => {
         var sql = 'select * from items where id=?'
         return new Promise((resolve, reject) => {
             conn.query(sql, [id], (error, item) => {
                 if (error) reject(error)
-                data.item = item
-                resolve(data)
+                requests.requests[0].item = item
+                resolve(requests)
+            })
+        })
+    }).then((requests) => {
+        var sql = 'select filename from item_images where item_id=?'
+        return new Promise((resolve, reject) => {
+            conn.query(sql, [id], (error, images) => {
+                if (error) reject(error)
+                requests.requests[0].item[0].images = images
+                resolve(requests)
+            })
+        })
+    }).then((requests) => {
+        const cat = category.split(',')
+        var sql = `select * from categories where id in (${cat})`
+        return new Promise((resolve, reject) => {
+            conn.query(sql, [], (error, categories) => {
+                if (error) reject(error)
+                requests.requests[0].item[0].categories = categories
+                resolve(requests)
+            })
+        })
+    }).then((requests) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from reviews where item_id=?', [id], (error, reviews) => {
+                if (error) reject(error)
+                requests.requests[0].item[0].reviews = reviews
+                resolve(requests)
             })
         })
     }).catch((errLog) => {
@@ -249,7 +309,8 @@ Item.updatedItemImages = (id, data) => {
     return new Promise((resolve, reject) => {
         conn.query(sql + arr_img.join(','), (error, result) => {
             if (error) reject(error)
-            resolve(result)
+            var requests = []
+            resolve({ requests })
         })
     })
 }
@@ -260,7 +321,7 @@ Item.deleteItem = (id) => {
             [id, id, id],
             (err, res, fields) => {
                 if (err) reject(err)
-                resolve(res)
+                resolve({ requests: [] })
             })
     })
 }

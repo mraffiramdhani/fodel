@@ -12,20 +12,21 @@ var Cart = function Cart(cart) {
 
 Cart.getCartByUserId = (userId) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from carts where user_id=?', userId, (err, res, fields) => {
+        conn.query('select * from carts where user_id=?', userId, (err, requests, fields) => {
             if (err) reject(err)
-            resolve(res)
+            resolve({ requests })
         })
     }).then(async (data) => {
-        for (var i = 0; i < data.length; i++) {
+        console.log(data)
+        for (var i = 0; i < data.requests.length; i++) {
             const image = new Promise((resolve, reject) => {
-                conn.query('select filename from item_images where item_id=?', [data[i].item_id], (err, res) => {
+                conn.query('select filename from item_images where item_id=?', [data.requests[i].item_id], (err, res) => {
                     if (err) reject(err)
                     resolve(res)
                 })
             })
             await image.then((result) => {
-                data[i].images = result
+                data.requests[i].images = result
             })
         }
         return data
@@ -45,12 +46,12 @@ Cart.addItemtoCart = (userId, newItem) => {
     })
 }
 
-Cart.updateIteminCart = (id, item) => {
+Cart.updateIteminCart = (id, userId, item) => {
     const { quantity, description, updated_at } = item
 
     return new Promise((resolve, reject) => {
-        conn.query('update carts set quantity=?, description=?, updated_at=? where id=?',
-            [quantity, description, updated_at, id],
+        conn.query('update carts set quantity=?, description=?, updated_at=? where id=? and user_id=?',
+            [quantity, description, updated_at, id, userId],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)

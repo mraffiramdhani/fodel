@@ -9,7 +9,7 @@ Category.getAllCategories = () => {
     return new Promise((resolve, reject) => {
         conn.query('select * from categories', (err, res, fields) => {
             if (err) reject(err)
-            resolve(res)
+            resolve({ requests: res })
         })
     })
 }

@@ -12,15 +12,15 @@ module.exports.list_all_restaurant = async (req, res) => {
             const resultJSON = JSON.parse(data);
             return res.status(200).send({
                 status: 200,
-                message: "OK",
                 success: true,
+                message: "Data Found",
                 source: 'Redis Cache',
                 data: resultJSON
             });
         } else {
             const data = await Restaurant.getAllRestaurant()
             redis.setex('index_restaurant', 600, JSON.stringify(data))
-            return res.status(200).send({ status: 200, message: "OK", success: true, source: 'Database Query', data: data })
+            return res.status(200).send({ status: 200, success: true, message: "Data Found", source: 'Database Query', data: data })
         }
     })
 }
@@ -33,22 +33,22 @@ module.exports.show_restaurant = async (req, res) => {
             const responseJSON = JSON.parse(data)
             return res.send({
                 status: 200,
-                message: "OK",
                 success: true,
+                message: "Data Found",
                 dataSource: 'Redis Cache',
                 data: responseJSON
             })
         } else {
             await Restaurant.getRestaurantById(id).then(async (data) => {
                 await Item.getItemByRestaurant(id).then((items) => {
-                    data[0].items = items
-                    redis.setex(`show_rest_id:${id}`, 600, JSON.stringify(data))
+                    var requests = [{ restaurant: data, items }]
+                    redis.setex(`show_rest_id:${id}`, 600, JSON.stringify({ requests }))
                     res.send({
                         status: 200,
-                        message: "OK",
                         success: true,
+                        message: "Data Found",
                         dataSource: 'Database Query',
-                        data
+                        data: { requests }
                     })
                 })
             })
@@ -64,13 +64,13 @@ module.exports.create_restaurant = async (req, res) => {
         }
         req.body.image = req.file.filename
         await Restaurant.createRestaurant(new Restaurant(req.body)).then(async (result) => {
-            await Restaurant.getRestaurantById(result.insertId).then((data) => {
+            await Restaurant.getRestaurantById(result.insertId).then((restaurant) => {
+                var requests = [{ restaurant }]
                 res.send({
                     status: 200,
-                    message: "OK",
                     success: true,
-                    result,
-                    data
+                    message: "Restaurant Created Successfuly.",
+                    data: { requests }
                 })
             })
         })
@@ -81,10 +81,15 @@ module.exports.create_restaurant = async (req, res) => {
 module.exports.update_restaurant = async (req, res) => {
     const { id } = req.params
 
-    console.log(req.body)
     await Restaurant.updateRestaurant(id, req.body).then(async (result) => {
-        await Restaurant.getRestaurantById(id).then((data) => {
-            res.send({ status: 200, message: "Restaurant Updated Successfuly.", success: true, result, data })
+        await Restaurant.getRestaurantById(id).then((restaurant) => {
+            var requests = [{ restaurant }]
+            res.send({
+                status: 200,
+                success: true,
+                message: "Restaurant Updated Successfuly.",
+                data: { requests }
+            })
         })
     })
 }
@@ -96,8 +101,16 @@ module.exports.update_restaurant_logo = async (req, res) => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
         }
-        await Restaurant.updateRestaurant(id, { logo: req.file.filename }).then((result) => {
-            res.send({ status: 200, message: "Restaurant Logo Updated Successfuly.", success: true, result })
+        await Restaurant.updateRestaurant(id, { logo: req.file.filename }).then(async (result) => {
+            await Restaurant.getRestaurantById(id).then((restaurant) => {
+                var requests = [{ restaurant }]
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Restaurant Logo Updated Successfuly.",
+                    data: { requests }
+                })
+            })
         })
     })
 }
@@ -108,8 +121,10 @@ module.exports.delete_restaurant = async (req, res) => {
     const { id } = req.params
     await Restaurant.deleteRestaurant(id).then((result) => {
         res.send({
+            status: 200,
             success: true,
-            result
+            message: "Restaurant Removed Successfuly.",
+            data: {}
         })
     })
 }

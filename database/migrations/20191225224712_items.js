@@ -8,7 +8,7 @@ exports.up = function (knex) {
         table.integer('restaurant_id').unsigned()
         table.timestamps()
 
-        table.foreign('restaurant_id').references('restaurants.id')
+        table.foreign('restaurant_id').references('restaurants.id').onDelete('cascade').onUpdate('cascade')
     });
 };
 

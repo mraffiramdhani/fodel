@@ -51,15 +51,28 @@ Review.createItemReview = (userId, newReview) => {
     })
 }
 
-Review.updateItemReview = (id, rev) => {
+Review.updateItemReview = (id, rev, userId) => {
     const { rating, review, updated_at } = rev
     return new Promise((resolve, reject) => {
-        conn.query('update reviews set rating=?, review=?, updated_at=? where id=?',
-            [rating, review, updated_at, id],
-            (err, res) => {
-                if (err) reject(err)
+        conn.query('select * from reviews where id=? and user_id=?', [id, userId], (err, res) => {
+            if (res.length > 0) {
                 resolve(res)
-            })
+            } else {
+                reject("Record not found")
+            }
+        })
+    }).then((data) => {
+        return new Promise((resolve, reject) => {
+            conn.query('update reviews set rating=?, review=?, updated_at=? where id=? and user_id=?',
+                [rating, review, updated_at, id, userId],
+                (err, res) => {
+                    if (err) reject(err)
+                    resolve(data)
+                })
+        })
+    }).catch((error) => {
+        console.log(error)
+        return error
     })
 }
 

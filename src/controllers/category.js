@@ -10,9 +10,9 @@ module.exports.list_all_category = (req, res) => {
             const resultJSON = JSON.parse(result);
             return res.status(200).json(resultJSON);
         } else {
-            const newData = await Category.getAllCategories()
-            redis.setex('all_cat', 600, JSON.stringify({ status: 200, message: "OK", source: 'Redis Cache', data: newData, }))
-            return res.status(200).json({ status: 200, message: "OK", source: 'Database query', data: newData, })
+            const data = await Category.getAllCategories()
+            redis.setex('all_cat', 600, JSON.stringify({ status: 200, success: true, message: "Data Found", source: 'Redis Cache', data }))
+            return res.status(200).json({ status: 200, success: true, message: "Data Found", source: 'Database query', data })
         }
     })
 }
@@ -27,12 +27,15 @@ module.exports.create_category = async (req, res) => {
             message: "Please provide a valid data"
         })
     } else {
-        const result = await Category.createCategory(new_category)
-        result.categories = await Category.getAllCategories()
-        res.send({
-            status: 200,
-            message: "OK",
-            result
+        await Category.createCategory(new_category).then(async () => {
+            await Category.getAllCategories().then((data) => {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Category Created Successfuly.",
+                    data
+                })
+            })
         })
     }
 }
@@ -41,14 +44,15 @@ module.exports.create_category = async (req, res) => {
 module.exports.update_category = async (req, res) => {
     const { id } = req.params
 
-    const result = await Category.updateCategory(id, new Category(req.body))
-    const data = await Category.getAllCategories()
-    res.send({
-        status: 200,
-        message: "OK",
-        success: true,
-        result,
-        data
+    await Category.updateCategory(id, new Category(req.body)).then(async () => {
+        await Category.getAllCategories().then((data) => {
+            res.send({
+                status: 200,
+                success: true,
+                message: "Category Updated Successfuly.",
+                data
+            })
+        })
     })
 }
 
@@ -56,11 +60,14 @@ module.exports.update_category = async (req, res) => {
 module.exports.delete_category = async (req, res) => {
     const { id } = req.params
 
-    const response = await Category.deleteCategory(id)
-    const data = await Category.getAllCategories()
-    res.send({
-        status: true,
-        response,
-        data
+    await Category.deleteCategory(id).then(async () => {
+        await Category.getAllCategories().then((data) => {
+            res.send({
+                status: 200,
+                success: true,
+                message: "Category Removed Successfuly.",
+                data
+            })
+        })
     })
 }

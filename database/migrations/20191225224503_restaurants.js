@@ -10,7 +10,7 @@ exports.up = function (knex) {
         table.integer('user_id').unsigned()
         table.timestamps()
 
-        table.foreign('user_id').references('users.id')
+        table.foreign('user_id').references('users.id').onDelete('cascade').onUpdate('cascade')
     });
 };
 
