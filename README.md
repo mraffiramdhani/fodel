@@ -19,10 +19,10 @@ Express.js is a web application framework for Node.js. [More about Express](http
 3. Type `npm install`
 4. Make new file a called **.env**, set up first [here](#set-up-env-file)
 5. Turn on Web Server and MySQL (can using Third-party tool like xampp, etc.)
-6. Create a database with the name **fodel**, and Import file [fodel.sql](fodel.sql) to **phpmyadmin** or simply use [knex](#knex.js)
+6. Create a database with the name **fodel**, and Import file [fodel.sql](fodel.sql) to **phpmyadmin** or simply use [knex](#knexjs)
 7. Open Postman (or Insomnia) desktop application or Chrome web app extension that has installed before
 8. Choose HTTP Method and enter request url.(ex. localhost:3000/item)
-9. You can see all the end point [here](#end-point)
+9. You can see all the end point [here](#end-point), some end point require specific user privileges to be able to access the data. read the [Usage](#usage)
 
 ## Set up .env file
 Open .env file on your favorite code editor, and copy paste this code below :
@@ -48,6 +48,25 @@ Open the directory on Terminal and Type commands below :
 $ node_modules/.bin/knex migrate:latest
 $ node_modules/.bin/knex seed:run
 ```
+
+## Usage
+
+### Testing Account
+Some of the end point require user(s) to have a spesific user privileges (e.g: administrator) to access the data. The user privileges are stored in the request headers using <a href="https://jwt.io/">JWT</a>.
+
+<details><summary><b>Show instructions</b></summary>
+
+1. Open **phpmyadmin** or any other DBMS
+2. Open **fodel** database and access **users** table
+3. Choose a Record and copy the **username**
+    * 1 = "Administrator"
+    * 2 = "Restaurant"
+    * 3 = "Customer"
+4. Open Postman (or Insomnia), Access the **login** end point [here](#end-point)
+5. On the formdata, fill username key with the copied username and password key with **"password"**
+6. Copy the token from the HTTP Request response to be used to access the end point
+
+</details>
 
 ## End Point
 **1. GET**
