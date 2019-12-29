@@ -59,8 +59,8 @@ module.exports = (app) => {
 
     app.route('/item/:id')
         .get(Items.show_item)
-        .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
-        .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
+        .patch(auth, hasRole('restaurant'), Items.update_item)
+        .delete(auth, hasRole('restaurant'), Items.delete_item)
 
     app.route('/item/:id/images')
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item_images)
@@ -76,6 +76,7 @@ module.exports = (app) => {
     app.route('/cart')
         .get(auth, hasRole('customer'), Carts.list_user_cart)
         .post(auth, hasRole('customer'), Carts.add_item_to_cart)
+        .patch(auth, hasRole('customer'), Carts.checkout_cart)
 
     app.route('/cart/:id')
         .patch(auth, hasRole('customer'), Carts.update_item_in_cart)

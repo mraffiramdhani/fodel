@@ -77,3 +77,16 @@ module.exports.delete_item_in_cart = async (req, res) => {
         })
     })
 }
+
+module.exports.checkout_cart = async (req, res) => {
+    const { id } = req.headers.auth_token
+
+    await Cart.checkoutCart(id).then((data) => {
+        res.send({
+            status: 200,
+            success: true,
+            message: "Checkout Successfull.",
+            data: {}
+        })
+    })
+}

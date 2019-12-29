@@ -6,6 +6,7 @@ exports.up = function (knex) {
         table.integer('quantity')
         table.text('description')
         table.integer('user_id').unsigned()
+        table.integer('is_complete').defaultTo(0)
         table.timestamps()
 
         table.foreign('item_id').references('items.id').onDelete('cascade').onUpdate('cascade')

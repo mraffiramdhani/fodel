@@ -69,7 +69,7 @@ Item.getNumRowsParam = (params) => {
 Item.getItemById = (id) => {
     return new Promise((resolve, reject) => {
         conn.query('select * from items where id=?', id, (err, res, fields) => {
-            if (err) reject(err)
+            if (res.length == 0) reject("Data not Found")
             resolve(res)
         })
     }).then((item) => {
@@ -161,16 +161,23 @@ Item.getItemByParams = (params, limit = null) => {
     })
 }
 
-Item.createItem = (newItem) => {
+Item.createItem = async (newItem) => {
     const { name, price, description, image, category, restaurant_id, created_at, updated_at } = newItem
 
     return new Promise((resolve, reject) => {
-        conn.query('insert into items(name, price, description, restaurant_id, created_at, updated_at) values(?,?,?,?,?,?)',
-            [name, price, description, restaurant_id, created_at, updated_at],
-            (err, res, fields) => {
-                if (err) reject(err)
-                resolve(res)
-            })
+        conn.query('select id from restaurants where user_id=?', [restaurant_id], (err, res) => {
+            if (err) reject(err)
+            resolve(res[0].id)
+        })
+    }).then((result) => {
+        return new Promise((resolve, reject) => {
+            conn.query('insert into items(name, price, description, restaurant_id, created_at, updated_at) values(?,?,?,?,?,?)',
+                [name, price, description, result, created_at, updated_at],
+                (err, res, fields) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+        })
     }).then((response) => {
         const cat = category.split(',')
         var sql = 'insert into item_category(item_id, category_id) values'
@@ -236,15 +243,22 @@ Item.createItem = (newItem) => {
 }
 
 Item.updateItem = (id, data) => {
-    const { name, price, description, category, updated_at } = data
+    const { name, price, description, restaurant_id, category, updated_at } = data
 
     return new Promise((resolve, reject) => {
-        conn.query('update items set name=?, price=?, description=?, updated_at=? where id=?',
-            [name, price, description, updated_at, id],
-            (err, res, fields) => {
-                if (err) reject(err)
-                resolve(res)
-            })
+        conn.query('select id from restaurants where user_id=?', [restaurant_id], (err, res) => {
+            if (res.length == 0) reject(err)
+            resolve(res[0].id)
+        })
+    }).then((result) => {
+        return new Promise((resolve, reject) => {
+            conn.query('update items set name=?, price=?, description=?, updated_at=? where id=? and restaurant_id=?',
+                [name, price, description, updated_at, id, result],
+                (err, res, fields) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+        })
     }).then((response) => {
         const cat = category.split(',')
         var sql = `delete from item_category where item_id=${id};insert into item_category(item_id, category_id) values`
@@ -315,14 +329,21 @@ Item.updatedItemImages = (id, data) => {
     })
 }
 
-Item.deleteItem = (id) => {
+Item.deleteItem = (id, user_id) => {
     return new Promise((resolve, reject) => {
-        conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=?',
-            [id, id, id],
-            (err, res, fields) => {
-                if (err) reject(err)
-                resolve({ requests: [] })
-            })
+        conn.query('select id from restaurants where user_id=?', [user_id], (err, res) => {
+            if (res.length == 0) reject(err)
+            resolve(res[0].id)
+        })
+    }).then((result) => {
+        return new Promise((resolve, reject) => {
+            conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=? and restaurant_id=?',
+                [id, id, id, result],
+                (err, res, fields) => {
+                    if (err) reject(err)
+                    resolve({ requests: [] })
+                })
+        })
     })
 }
 

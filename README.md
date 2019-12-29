@@ -52,19 +52,19 @@ $ node_modules/.bin/knex seed:run
 ## Usage
 
 ### Testing Account
-Some of the end point require user(s) to have a spesific user privileges (e.g: administrator) to access the data. The user privileges are stored in the request headers using <a href="https://jwt.io/">JWT</a>.
+Some of the end point require user(s) to have a spesific user privileges (e.g: administrator) to access the data. The user privileges are stored in the request headers using <a href="https://jwt.io/">JSON Web Token</a>.
 
 <details><summary><b>Show instructions</b></summary>
 
 1. Open **phpmyadmin** or any other DBMS
 2. Open **fodel** database and access **users** table
-3. Choose a Record and copy the **username**
+3. Choose a Record and copy the **username** based on the **roles_id**
     * 1 = "Administrator"
     * 2 = "Restaurant"
     * 3 = "Customer"
 4. Open Postman (or Insomnia), Access the **login** end point [here](#end-point)
 5. On the formdata, fill username key with the copied username and password key with **"password"**
-6. Copy the token from the HTTP Request response to be used to access the end point
+6. Copy the token from the HTTP Request response to access the end point
 
 </details>
 
@@ -100,7 +100,7 @@ Some of the end point require user(s) to have a spesific user privileges (e.g: a
     * ``` { "name": "Joe's Pizza", "logo": "img.png", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
 
 * `/item`
-    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3, "restaurant_id": 1 } ```
+    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": ArrayofObject, "category": 1,2,3, "restaurant_id": 1 } ```
 
 * `/item/:id/review`
     * ``` { "rating": 4, "review": "Lorem Ipsum." } ```
@@ -132,6 +132,8 @@ Some of the end point require user(s) to have a spesific user privileges (e.g: a
 
 * `/cart/:id` (Update Cart by id)
    * ``` { "quantity": 3, "description": "Lorem Ipsum." } ```
+
+* `/cart` (Cart Checkout by User id)
 
 **4. DELETE**
 * `/user/:id` (Delete User by id)
