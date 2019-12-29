@@ -134,7 +134,6 @@ Some of the end point require user(s) to have a spesific user privileges (e.g: a
    * ``` { "quantity": 3, "description": "Lorem Ipsum." } ```
 
 * `/cart` (Cart Checkout by User id)
-    * ``` { "user_id": 1 } ```
 
 **4. DELETE**
 * `/user/:id` (Delete User by id)
