@@ -58,13 +58,13 @@ Some of the end point require user(s) to have a spesific user privileges (e.g: a
 
 1. Open **phpmyadmin** or any other DBMS
 2. Open **fodel** database and access **users** table
-3. Choose a Record and copy the **username**
+3. Choose a Record and copy the **username** based on the **roles_id**
     * 1 = "Administrator"
     * 2 = "Restaurant"
     * 3 = "Customer"
 4. Open Postman (or Insomnia), Access the **login** end point [here](#end-point)
 5. On the formdata, fill username key with the copied username and password key with **"password"**
-6. Copy the token from the HTTP Request response to be used to access the end point
+6. Copy the token from the HTTP Request response to access the end point
 
 </details>
 
