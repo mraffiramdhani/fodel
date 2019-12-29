@@ -76,6 +76,7 @@ module.exports = (app) => {
     app.route('/cart')
         .get(auth, hasRole('customer'), Carts.list_user_cart)
         .post(auth, hasRole('customer'), Carts.add_item_to_cart)
+        .patch(auth, hasRole('customer'), Carts.checkout_cart)
 
     app.route('/cart/:id')
         .patch(auth, hasRole('customer'), Carts.update_item_in_cart)

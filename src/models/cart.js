@@ -69,4 +69,15 @@ Cart.deleteIteminCart = (id) => {
     })
 }
 
+Cart.checkoutCart = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('update carts set is_complete=1, updated_at=? where user_id=?',
+            [new Date(), id],
+            (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
+}
+
 module.exports = Cart
