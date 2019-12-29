@@ -94,7 +94,10 @@ REDIS_PORT=6379
    * ``` { "logo": "img.png" } ```
 
 * `/item/:id` (Update Item by id)
-   * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3 } ```
+   * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "category": 1,2,3 } ```
+
+* `/item/:id/images` (Update Item images by id)
+   * ``` { "image": [image] } ```
 
 * `/review/:id` (Update Review by id)
    * ``` { "rating": 4, "review": "Lorem Ipsum." } ```

@@ -45,16 +45,22 @@ module.exports.register_user = async (req, res) => {
                 if (err) {
                     res.send(err)
                     console.log('error', err)
-                    console.log('res', result)
+                    console.log('res', data)
                 } else {
                     res.send({
                         status: 200,
                         success: true,
                         message: "User Registered Successfuly.",
-                        result,
+                        data: {},
                         token
                     })
                 }
+            })
+        }).catch((error) => {
+            console.log(error)
+            res.send({
+                success: false,
+                error
             })
         })
     }
@@ -84,8 +90,8 @@ module.exports.login_user = async (req, res) => {
                     } else {
                         res.send({
                             status: 200,
-                            message: "OK",
                             success: true,
+                            message: "User Logged In Successfuly.",
                             token
                         })
                     }
@@ -117,7 +123,13 @@ module.exports.create_user = async (req, res) => {
     } else {
         await User.createUser(new_user).then(async (result) => {
             await User.getUserById(result.insertId).then((data) => {
-                res.send({ status: 200, message: "OK", success: true, result, data })
+                res.send({ status: 200, success: true, message: "User Created Successfuly.", data: { requests: data } })
+            })
+        }).catch((error) => {
+            console.log(error)
+            res.send({
+                success: false,
+                error
             })
         })
     }
@@ -136,7 +148,7 @@ module.exports.update_user = async (req, res) => {
     } else {
         await User.updateUser(id, new_user).then(async (result) => {
             await User.getUserById(id).then((data) => {
-                res.send({ status: 200, message: "OK", success: true, result, data })
+                res.send({ status: 200, success: true, message: "User Updated Successfuly.", data: { requests: data } })
             })
         })
     }
@@ -146,7 +158,16 @@ module.exports.delete_user = async (req, res) => {
     const { id } = req.params
     await User.deleteUser(id).then((result) => {
         res.send({
-            success: true, result
+            status: 200,
+            success: true,
+            message: "User Removed Successfuly.",
+            data: {}
+        })
+    }).catch((error) => {
+        console.log(error)
+        res.send({
+            success: false,
+            error
         })
     })
 }
@@ -161,8 +182,10 @@ module.exports.logout_user = (req, res) => {
                 })
             } else {
                 res.send({
+                    status: 200,
                     success: true,
-                    message: "User Logged Out Successfuly"
+                    message: "User Logged Out Successfuly",
+                    data: {}
                 })
             }
         }
