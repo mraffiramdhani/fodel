@@ -2,27 +2,27 @@
 
 
 
-Fodel is a Food Delivery application specially for backend only. Built with NodeJs using the ExpressJs Framework.
+Fodel is a Food Delivery RESTful API. Built with NodeJs using the ExpressJs Framework.
 Express.js is a web application framework for Node.js. [More about Express](https://en.wikipedia.org/wiki/Express.js)
 ## Built With
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-orange.svg?style=rounded-square)](https://expressjs.com/en/starter/installing.html)
 [![Node.js](https://img.shields.io/badge/Node.js-v.12.14-green.svg?style=rounded-square)](https://nodejs.org/)
 
 ## Requirements
-1. <a href="https://nodejs.org/en/download/">Node Js</a>
-2. Node_modules
-3. <a href="https://www.getpostman.com/">Postman</a> or <a href="https://insomnia.rest/">Insomnia</a>
-4. Web Server (ex. localhost)
+1. <a href="https://nodejs.org/en/download/">Node JS</a>
+2. <a href="https://www.getpostman.com/">Postman</a> or <a href="https://insomnia.rest/">Insomnia</a>
+3. Web Server (ex. localhost)
 
 ## How to run the app ?
-1. Open app's directory in CMD or Terminal
-2. Type `npm install`
-3. Make new file a called **.env**, set up first [here](#set-up-env-file)
-4. Turn on Web Server and MySQL can using Third-party tool like xampp, etc.
-5. Create a database with the name note, and Import file [note.sql](note.sql) to **phpmyadmin**
-6. Open Postman desktop application or Chrome web app extension that has installed before
-7. Choose HTTP Method and enter request url.(ex. localhost:3000/notes)
-8. You can see all the end point [here](#end-point)
+1. Clone this repository to your local directory (e.g: ~/dev/javascript/fodel)
+2. Open the directory in CMD or Terminal
+3. Type `npm install`
+4. Make new file a called **.env**, set up first [here](#set-up-env-file)
+5. Turn on Web Server and MySQL (can using Third-party tool like xampp, etc.)
+6. Create a database with the name **fodel**, and Import file [fodel.sql](fodel.sql) to **phpmyadmin** or simply use [knex](#knex.js)
+7. Open Postman (or Insomnia) desktop application or Chrome web app extension that has installed before
+8. Choose HTTP Method and enter request url.(ex. localhost:3000/item)
+9. You can see all the end point [here](#end-point)
 
 ## Set up .env file
 Open .env file on your favorite code editor, and copy paste this code below :
@@ -38,6 +38,15 @@ DB_DATABASE=fodel
 
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
+```
+
+## Knex.js
+Knex.js is a "batteries included" SQL query builder for Postgres, MSSQL, MySQL, MariaDB, SQLite3, Oracle, and Amazon Redshift designed to be flexible, portable, and fun to use. It features both traditional node style callbacks as well as a promise interface for cleaner async flow control, a stream interface, full featured query and schema builders, transaction support (with savepoints), connection pooling and standardized responses between different query clients and dialects.
+
+Open the directory on Terminal and Type commands below :
+```
+$ node_modules/.bin/knex migrate:latest
+$ node_modules/.bin/knex seed:run
 ```
 
 ## End Point
