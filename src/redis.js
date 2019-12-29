@@ -1,3 +1,4 @@
+require('dotenv').config()
 const redis = require('redis')
 
 var port = process.env.REDIS_PORT || 6379;
