@@ -52,7 +52,7 @@ $ node_modules/.bin/knex seed:run
 ## Usage
 
 ### Testing Account
-Some of the end point require user(s) to have a spesific user privileges (e.g: administrator) to access the data. The user privileges are stored in the request headers using <a href="https://jwt.io/">JWT</a>.
+Some of the end point require user(s) to have a spesific user privileges (e.g: administrator) to access the data. The user privileges are stored in the request headers using <a href="https://jwt.io/">JSON Web Token</a>.
 
 <details><summary><b>Show instructions</b></summary>
 
@@ -100,7 +100,7 @@ Some of the end point require user(s) to have a spesific user privileges (e.g: a
     * ``` { "name": "Joe's Pizza", "logo": "img.png", "longitude": -120.01280, "latitude": 11.109129, "description": "Lorem Ipsum Dolor Sit Amet", "user_id": 3 } ```
 
 * `/item`
-    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": "img.png", "category": 1,2,3, "restaurant_id": 1 } ```
+    * ``` { "name": "Macaronni and Cheese Pizza", "price": 12000 , "description": "Lorem Ipsum Dolor Sit Amet", "image": ArrayofObject, "category": 1,2,3, "restaurant_id": 1 } ```
 
 * `/item/:id/review`
     * ``` { "rating": 4, "review": "Lorem Ipsum." } ```

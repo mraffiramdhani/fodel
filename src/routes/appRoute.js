@@ -59,8 +59,8 @@ module.exports = (app) => {
 
     app.route('/item/:id')
         .get(Items.show_item)
-        .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
-        .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
+        .patch(auth, hasRole('restaurant'), Items.update_item)
+        .delete(auth, hasRole('restaurant'), Items.delete_item)
 
     app.route('/item/:id/images')
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item_images)
