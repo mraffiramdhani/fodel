@@ -13,14 +13,15 @@ module.exports.list_all_users = async (req, res) => {
             const resultJSON = JSON.parse(data);
             return res.status(200).send({
                 status: 200,
-                message: 'OK',
+                success: true,
+                message: 'Data Found',
                 dataSource: 'Redis Cache',
                 data: resultJSON
             });
         } else {
             const data = await User.getAllUser()
             redis.setex('index_user', 600, JSON.stringify(data))
-            return res.status(200).send({ status: 200, message: 'OK', dataSource: 'Database Query', data })
+            return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database Query', data })
         }
     })
 }
@@ -29,12 +30,12 @@ module.exports.list_all_users = async (req, res) => {
 module.exports.register_user = async (req, res) => {
     const { name, username, password } = req.body
     const role_id = 3 //assuming that new registered user are all customer
-    var new_user = new User({ name, username, password, role_id })
+    var new_user = new User({ name, username, password })
 
     if (!new_user.name || !new_user.username || !new_user.password) {
         res.status(400).send({
             error: true,
-            message: "Please provide a valid data"
+            message: "Please provide a valid data."
         })
     } else {
         await User.createUser(new_user).then((result) => {
@@ -48,8 +49,8 @@ module.exports.register_user = async (req, res) => {
                 } else {
                     res.send({
                         status: 200,
-                        message: "OK",
                         success: true,
+                        message: "User Registered Successfuly.",
                         result,
                         token
                     })
