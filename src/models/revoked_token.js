@@ -7,28 +7,14 @@ var RevToken = function RevToken(data) {
     this.created_at = new Date()
 }
 
-// RevToken.getRevokedToken = (token, result) => {
-//     conn.query('select token from revoked_token where token=? and is_revoked=1', [token], (err, res, fields) => {
-//         if (err) {
-//             console.log('error: ', err)
-//             result(null, err)
-//         } else {
-//             console.log('token', res)
-//             result(null, res)
-//         }
-//     })
-// }
-
 RevToken.putToken = (str_token, result) => {
     const { token, is_revoked, created_at } = str_token
     conn.query('insert into revoked_token(token, is_revoked, created_at) values(?,?,?)',
         [token, is_revoked, created_at],
         (err, res, fields) => {
             if (err) {
-                console.log('error: ', err)
                 result(null, err)
             } else {
-                console.log('token', res)
                 result(null, res)
             }
         })
@@ -39,10 +25,8 @@ RevToken.revokeToken = (str_token, result) => {
         str_token,
         (err, res, fields) => {
             if (err) {
-                console.log('error: ', err)
                 result(null, err)
             } else {
-                console.log('token', res)
                 result(null, res)
             }
         })

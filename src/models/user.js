@@ -11,96 +11,75 @@ var User = function User(user) {
     this.updated_at = new Date()
 }
 
-User.getAllUser = (result) => {
-    conn.query('select * from users', (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getAllUser = () => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users', (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-User.getUserById = (id, result) => {
-    conn.query('select * from users where id=?', id, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getUserById = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users where id=?', id, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-User.getUserByUsername = (username, result) => {
-    conn.query('select * from users where username=?', username, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getUserByUsername = (username) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users where username=?', username, (err, res, fields) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-User.getUserByRole = (role_id, result) => {
-    conn.query('select * from users where role_id=?', role_id, (req, res) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.getUserByRole = (role_id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from users where role_id=?', role_id, (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 
-User.createUser = (newUser, result) => {
+User.createUser = (newUser) => {
     const { name, username, password, role_id, created_at, updated_at } = newUser
     const encPass = bcrypt.hashSync(password)
-    conn.query(
-        'INSERT INTO users(name, username, password, role_id, created_at, updated_at) VALUES(?,?,?,?,?,?)',
-        [name, username, encPass, role_id, created_at, updated_at],
-        (err, res, fields) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('users:', res)
-                result(null, res)
-            }
-        })
+    return new Promise((resolve, reject) => {
+        conn.query(
+            'INSERT INTO users(name, username, password, role_id, created_at, updated_at) VALUES(?,?,?,?,?,?)',
+            [name, username, encPass, role_id, created_at, updated_at],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-User.updateUser = (id, user, result) => {
+User.updateUser = (id, user) => {
     const { name, username, password, role_id, updated_at } = user
     const encPass = bcrypt.hashSync(password)
-    conn.query('update users set name=?, username=?, password=?, role_id=?, updated_at=? where id=?',
-        [name, username, encPass, role_id, updated_at, id],
-        (req, res) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('users:', res)
-                result(null, res)
-            }
-        })
+    return new Promise((resolve, reject) => {
+        conn.query('update users set name=?, username=?, password=?, role_id=?, updated_at=? where id=?',
+            [name, username, encPass, role_id, updated_at, id],
+            (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-User.deleteUser = (id, result) => {
-    conn.query('delete from users where id=?', id, (req, res) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('users:', res)
-            result(null, res)
-        }
+User.deleteUser = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('delete from users where id=?', id, (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
     })
 }
 

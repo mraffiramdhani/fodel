@@ -1,24 +1,24 @@
 'use strict'
 
-var Category = require('../models/category')
+const Category = require('../models/category'),
+    redis = require('../redis');
 
+// working as intended
 module.exports.list_all_category = (req, res) => {
-    Category.getAllCategories((err, result, fields) => {
-        console.log('Category Controller Category index')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
+    return redis.get('all_cat', async (ex, result) => {
+        if (result) {
+            const resultJSON = JSON.parse(result);
+            return res.status(200).json(resultJSON);
         } else {
-            res.send({
-                success: true,
-                result
-            })
+            const data = await Category.getAllCategories()
+            redis.setex('all_cat', 600, JSON.stringify({ status: 200, success: true, message: "Data Found", source: 'Redis Cache', data }))
+            return res.status(200).json({ status: 200, success: true, message: "Data Found", source: 'Database query', data })
         }
     })
 }
 
-module.exports.create_category = (req, res) => {
+// working as intended
+module.exports.create_category = async (req, res) => {
     var new_category = new Category(req.body)
 
     if (!new_category.name) {
@@ -27,52 +27,47 @@ module.exports.create_category = (req, res) => {
             message: "Please provide a valid data"
         })
     } else {
-        Category.createCategory(new_category, (err, result) => {
-            console.log('Category Controller create category')
-            if (err) {
-                res.send(err)
-                console.log('error', err)
-                console.log('res', result)
-            } else {
+        await Category.createCategory(new_category).then(async () => {
+            await Category.getAllCategories().then((data) => {
                 res.send({
+                    status: 200,
                     success: true,
-                    result
+                    message: "Category Created Successfuly.",
+                    data
                 })
-            }
+            })
         })
     }
 }
 
-module.exports.update_category = (req, res) => {
+//working as intended
+module.exports.update_category = async (req, res) => {
     const { id } = req.params
-    Category.updateCategory(id, new Category(req.body), (err, result, fields) => {
-        console.log('Category Controller update category')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
+
+    await Category.updateCategory(id, new Category(req.body)).then(async () => {
+        await Category.getAllCategories().then((data) => {
             res.send({
+                status: 200,
                 success: true,
-                result
+                message: "Category Updated Successfuly.",
+                data
             })
-        }
+        })
     })
 }
 
-module.exports.delete_category = (req, res) => {
+// working as intended
+module.exports.delete_category = async (req, res) => {
     const { id } = req.params
-    Category.deleteCategory(id, (err, result, fields) => {
-        console.log('Category Controller delete category')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
+
+    await Category.deleteCategory(id).then(async () => {
+        await Category.getAllCategories().then((data) => {
             res.send({
+                status: 200,
                 success: true,
-                result
+                message: "Category Removed Successfuly.",
+                data
             })
-        }
+        })
     })
 }

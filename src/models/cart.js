@@ -6,64 +6,67 @@ var Cart = function Cart(cart) {
     this.item_id = cart.item_id
     this.quantity = cart.quantity
     this.description = cart.description
-    this.user_id = cart.user_id
     this.created_at = new Date()
     this.updated_at = new Date()
 }
 
-Cart.getCartByUserId = (userId, result) => {
-    conn.query('select * from carts where user_id=?', userId, (err, res, fields) => {
-        if (err) {
-            console.log('error: ', err)
-            result(null, err)
-        } else {
-            console.log('data:', res)
-            result(null, res)
+Cart.getCartByUserId = (userId) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from carts where user_id=?', userId, (err, requests, fields) => {
+            if (err) reject(err)
+            resolve({ requests })
+        })
+    }).then(async (data) => {
+        console.log(data)
+        for (var i = 0; i < data.requests.length; i++) {
+            const image = new Promise((resolve, reject) => {
+                conn.query('select filename from item_images where item_id=?', [data.requests[i].item_id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await image.then((result) => {
+                data.requests[i].images = result
+            })
         }
+        return data
     })
 }
 
-Cart.addItemtoCart = (userId, newItem, result) => {
+Cart.addItemtoCart = (userId, newItem) => {
     const { item_id, quantity, description, created_at, updated_at } = newItem
-    conn.query('insert into carts(item_id, quantity, description, user_id, created_at, updated_at) values(?,?,?,?,?,?)',
-        [item_id, quantity, description, userId, created_at, updated_at],
-        (err, res, fields) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+
+    return new Promise((resolve, reject) => {
+        conn.query('insert into carts(item_id, quantity, description, user_id, created_at, updated_at) values(?,?,?,?,?,?)',
+            [item_id, quantity, description, userId, created_at, updated_at],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Cart.updateIteminCart = (id, item, result) => {
+Cart.updateIteminCart = (id, userId, item) => {
     const { quantity, description, updated_at } = item
-    conn.query('update carts set quantity=?, description=?, updated_at=? where id=?',
-        [quantity, description, updated_at, id],
-        (err, res, fields) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+
+    return new Promise((resolve, reject) => {
+        conn.query('update carts set quantity=?, description=?, updated_at=? where id=? and user_id=?',
+            [quantity, description, updated_at, id, userId],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
-Cart.deleteIteminCart = (id, result) => {
-    conn.query('delete from carts where id=?',
-        id, (err, res, fields) => {
-            if (err) {
-                console.log('error: ', err)
-                result(null, err)
-            } else {
-                console.log('data:', res)
-                result(null, res)
-            }
-        })
+Cart.deleteIteminCart = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('delete from carts where id=?',
+            id, (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+    })
 }
 
 module.exports = Cart

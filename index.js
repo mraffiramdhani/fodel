@@ -2,7 +2,9 @@
 require('dotenv').config()
 const express = require('express'),
     cors = require('cors'),
+    compression = require('compression'),
     bodyParser = require('body-parser'),
+    responseTime = require('response-time'),
     port = process.env.APP_PORT;
 
 // assign express instance to app variable
@@ -14,6 +16,8 @@ app.use(bodyParser.urlencoded({
 }))
 app.use(bodyParser.json())
 app.use(cors())
+app.use(responseTime())
+app.use(compression())
 
 // define app port
 app.listen(port, () => {

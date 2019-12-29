@@ -2,70 +2,78 @@
 
 var Cart = require('../models/cart')
 
-module.exports.list_user_cart = (req, res) => {
-    const { id } = req.auth
-    Cart.getCartByUserId(id, (err, result) => {
-        console.log('Cart Controller Cart index')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
+// working as intended
+module.exports.list_user_cart = async (req, res) => {
+    const { id } = req.headers.auth_token
+
+    await Cart.getCartByUserId(id)
+        .then((data) => {
+            if (data.requests.length > 0) {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Cart Data Found.",
+                    data
+                })
+            } else {
+                res.send({
+                    status: 200,
+                    success: true,
+                    message: "Cart Data not Found.",
+                    data
+                })
+            }
+        }).catch((error) => {
+            res.json({ success: false, message: error, data: {} })
+        })
+}
+
+// working as intended
+module.exports.add_item_to_cart = async (req, res) => {
+    const { id } = req.headers.auth_token
+
+    await Cart.addItemtoCart(id, new Cart(req.body)).then(async () => {
+        await Cart.getCartByUserId(id).then((data) => {
             res.send({
+                status: 200,
                 success: true,
-                result
+                message: "Item Added to Cart.",
+                data
             })
-        }
+        })
     })
 }
 
-module.exports.add_item_to_cart = (req, res) => {
-    const { id } = req.auth
-    Cart.addItemtoCart(id, new Cart(req.body), (err, result) => {
-        console.log('Cart Controller add item to user cart')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
-            res.send({
-                success: true,
-                result
-            })
-        }
-    })
-}
-
-module.exports.update_item_in_cart = (req, res) => {
+//working as intended
+module.exports.update_item_in_cart = async (req, res) => {
     const { id } = req.params
-    Cart.updateIteminCart(id, new Cart(req.body), (err, result) => {
-        console.log('Cart Controller update item in user cart')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
+    const userId = req.headers.auth_token.id
+
+    await Cart.updateIteminCart(id, userId, new Cart(req.body)).then(async () => {
+        await Cart.getCartByUserId(userId).then((data) => {
             res.send({
+                status: 200,
                 success: true,
-                result
+                message: "Cart Item Updated Successfuly.",
+                data
             })
-        }
+        })
     })
 }
 
-module.exports.delete_item_in_cart = (req, res) => {
+//working as intended
+module.exports.delete_item_in_cart = async (req, res) => {
     const { id } = req.params
-    Cart.deleteIteminCart(id, (err, result, fields) => {
-        console.log('Cart Controller delete item in cart')
-        if (err) {
-            res.send(err)
-            console.log('error', err)
-            console.log('res', result)
-        } else {
+    const userId = req.headers.auth_token.id
+
+    await Cart.deleteIteminCart(id).then(async () => {
+        await Cart.getCartByUserId(userId).then((data) => {
             res.send({
+                status: 200,
                 success: true,
-                result
+                message: "Item Cart Removed Successfuly.",
+                data
             })
-        }
+        })
     })
 }
