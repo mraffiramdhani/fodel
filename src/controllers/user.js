@@ -77,7 +77,7 @@ module.exports.login_user = async (req, res) => {
         })
     } else {
         const user = await User.getUserByUsername(username)
-        if (user) {
+        if (user.length > 0) {
             console.log('User Controller login user - username verified')
             if (bcrypt.compareSync(password, user[0].password)) {
                 console.log('User Controller login user - password verified')
