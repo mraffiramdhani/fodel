@@ -17,7 +17,6 @@ Cart.getCartByUserId = (userId) => {
             resolve({ requests })
         })
     }).then(async (data) => {
-        console.log(data)
         for (var i = 0; i < data.requests.length; i++) {
             const image = new Promise((resolve, reject) => {
                 conn.query('select filename from item_images where item_id=?', [data.requests[i].item_id], (err, res) => {

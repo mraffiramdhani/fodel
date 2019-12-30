@@ -125,7 +125,7 @@ module.exports.show_item = async (req, res) => {
 }
 
 module.exports.create_item = async (req, res) => {
-    req.body.restaurant_id = req.headers.auth_token.id
+    req.body.restaurant_id = req.auth.id
     multer.uploadImages(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
@@ -151,7 +151,7 @@ module.exports.create_item = async (req, res) => {
 // working asn intended
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
-    req.body.restaurant_id = req.headers.auth_token.id
+    req.body.restaurant_id = req.auth.id
     await Item.updateItem(id, new Item(req.body)).then((data) => {
         return res.json({
             status: 200,
@@ -191,7 +191,7 @@ module.exports.update_item_images = (req, res) => {
 // working as intended
 module.exports.delete_item = async (req, res) => {
     const { id } = req.params
-    const user_id = req.headers.auth_token.id
+    const user_id = req.auth.id
 
     await Item.deleteItem(id, user_id).then((data) => {
         res.send({

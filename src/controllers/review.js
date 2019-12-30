@@ -12,7 +12,7 @@ module.exports.list_item_review = async (req, res) => {
 
 //working as intended
 module.exports.list_user_review = async (req, res) => {
-    const { id } = req.headers.auth_token
+    const { id } = req.auth
     await Review.getUserReview(id).then((data) => {
         res.send({ status: 200, success: true, message: "Data Found", data })
     })
@@ -21,7 +21,7 @@ module.exports.list_user_review = async (req, res) => {
 // working as intended
 module.exports.add_item_review = async (req, res) => {
     const { rating, review } = req.body
-    const { id } = req.headers.auth_token
+    const { id } = req.auth
     const item_id = req.params.id
     await Review.createItemReview(id, new Review({ rating, review, item_id })).then(async (result) => {
         await Review.getItemReview(item_id).then((data) => {
@@ -33,7 +33,7 @@ module.exports.add_item_review = async (req, res) => {
 // working as intended
 module.exports.update_item_review = async (req, res) => {
     const { id } = req.params
-    const userId = req.headers.auth_token.id
+    const userId = req.auth.id
     await Review.updateItemReview(id, new Review(req.body), userId).then(async (result) => {
         await Review.getReviewById(id).then((data) => {
             res.send({ status: 200, success: true, message: "Item Review Updated Successfuly.", data })

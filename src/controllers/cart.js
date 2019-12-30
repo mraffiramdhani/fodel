@@ -4,7 +4,8 @@ var Cart = require('../models/cart')
 
 // working as intended
 module.exports.list_user_cart = async (req, res) => {
-    const { id } = req.headers.auth_token
+    const { id } = req.auth
+    console.log(id)
 
     await Cart.getCartByUserId(id)
         .then((data) => {
@@ -19,7 +20,7 @@ module.exports.list_user_cart = async (req, res) => {
                 res.send({
                     status: 200,
                     success: true,
-                    message: "Cart Data not Found.",
+                    message: "Cart Empty. Let's Go Food Hunting!",
                     data
                 })
             }
@@ -30,7 +31,7 @@ module.exports.list_user_cart = async (req, res) => {
 
 // working as intended
 module.exports.add_item_to_cart = async (req, res) => {
-    const { id } = req.headers.auth_token
+    const { id } = req.auth
 
     await Cart.addItemtoCart(id, new Cart(req.body)).then(async () => {
         await Cart.getCartByUserId(id).then((data) => {
@@ -47,7 +48,7 @@ module.exports.add_item_to_cart = async (req, res) => {
 //working as intended
 module.exports.update_item_in_cart = async (req, res) => {
     const { id } = req.params
-    const userId = req.headers.auth_token.id
+    var userId = req.auth.id
 
     await Cart.updateIteminCart(id, userId, new Cart(req.body)).then(async () => {
         await Cart.getCartByUserId(userId).then((data) => {
@@ -64,7 +65,7 @@ module.exports.update_item_in_cart = async (req, res) => {
 //working as intended
 module.exports.delete_item_in_cart = async (req, res) => {
     const { id } = req.params
-    const userId = req.headers.auth_token.id
+    var userId = req.auth.id
 
     await Cart.deleteIteminCart(id).then(async () => {
         await Cart.getCartByUserId(userId).then((data) => {
@@ -79,7 +80,7 @@ module.exports.delete_item_in_cart = async (req, res) => {
 }
 
 module.exports.checkout_cart = async (req, res) => {
-    const { id } = req.headers.auth_token
+    const { id } = req.auth
 
     await Cart.checkoutCart(id).then((data) => {
         res.send({

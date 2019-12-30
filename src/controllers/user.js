@@ -30,7 +30,7 @@ module.exports.list_all_users = async (req, res) => {
 module.exports.register_user = async (req, res) => {
     const { name, username, password } = req.body
     const role_id = 3 //assuming that new registered user are all customer
-    var new_user = new User({ name, username, password })
+    var new_user = new User({ name, username, password, role_id })
 
     if (!new_user.name || !new_user.username || !new_user.password) {
         res.status(400).send({
