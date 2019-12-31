@@ -20,7 +20,6 @@ const auth = (req, res, next) => {
                 } else {
                     try {
                         const auth_data = jwt.verify(jwt_token, process.env.APP_KEY)
-                        // req.auth = auth_data
                         req.auth = auth_data
                         next()
                     } catch (e) {
