@@ -82,4 +82,6 @@ module.exports = (app) => {
         .patch(auth, hasRole('customer'), Carts.update_item_in_cart)
         .delete(auth, hasRole('customer'), Carts.delete_item_in_cart)
 
+    app.route('/check-token').post(Users.check_token)
+
 }

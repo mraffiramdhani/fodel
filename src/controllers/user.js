@@ -1,5 +1,6 @@
 'use strict'
 
+require('dotenv').config()
 var User = require('../models/user')
 const jwt = require('jsonwebtoken'),
     bcrypt = require('bcryptjs'),
@@ -66,6 +67,27 @@ module.exports.register_user = async (req, res) => {
     }
 }
 
+module.exports.check_token = async (req, res) => {
+    const { token } = req.body
+    await RevToken.isRevoked(token).then((resut) => {
+        const auth_data = jwt.verify(token, process.env.APP_KEY)
+        var role = ''
+        if (auth_data.role_id == 1) {
+            role = 'administrator'
+        } else if (auth_data.role_id == 2) {
+            role = 'restaurant'
+        }
+        res.status(200).send({
+            success: true,
+            role
+        })
+    }).catch((error) => {
+        res.status(400).send({
+            success: false,
+            error
+        })
+    })
+}
 
 module.exports.login_user = async (req, res) => {
     const { username, password } = req.body

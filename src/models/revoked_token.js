@@ -20,6 +20,15 @@ RevToken.putToken = (str_token, result) => {
         })
 }
 
+RevToken.isRevoked = (token) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from revoked_token where token=? and is_revoked=1', [token], (err, res) => {
+            if (res > 0) reject("Session Expired. Please Log In Again.")
+            resolve(res)
+        })
+    })
+}
+
 RevToken.revokeToken = (str_token, result) => {
     conn.query('update revoked_token set is_revoked=1 where token=?',
         str_token,
