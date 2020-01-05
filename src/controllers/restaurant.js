@@ -48,15 +48,17 @@ module.exports.show_restaurant = async (req, res) => {
             })
         } else {
             await Restaurant.getRestaurantById(id).then(async (data) => {
-                await Item.getItemByRestaurant(id).then((items) => {
-                    var requests = [{ restaurant: data, items }]
-                    redis.setex(`show_rest_id:${id}`, 600, JSON.stringify({ requests }))
-                    res.send({
-                        status: 200,
-                        success: true,
-                        message: "Data Found",
-                        dataSource: 'Database Query',
-                        data: { requests }
+                await User.getUserById(data[0].user_id).then(async (user) => {
+                    await Item.getItemByRestaurant(id).then((items) => {
+                        var requests = [{ restaurant: data, items }]
+                        redis.setex(`show_rest_id:${id}`, 600, JSON.stringify({ requests, owner: user[0].name }))
+                        res.send({
+                            status: 200,
+                            success: true,
+                            message: "Data Found",
+                            dataSource: 'Database Query',
+                            data: { requests, owner: user[0].name }
+                        })
                     })
                 })
             })
