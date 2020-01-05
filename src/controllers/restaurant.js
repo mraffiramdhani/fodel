@@ -1,6 +1,7 @@
 'use strict'
 
 var Restaurant = require('../models/restaurant'),
+    User = require('../models/user'),
     Item = require('../models/item'),
     redis = require('../redis'),
     multer = require('../multer');
@@ -71,14 +72,34 @@ module.exports.create_restaurant = async (req, res) => {
         }
         req.body.image = req.file.filename
         await Restaurant.createRestaurant(new Restaurant(req.body)).then(async (result) => {
-            await Restaurant.getRestaurantById(result.insertId).then((restaurant) => {
-                var requests = [{ restaurant }]
-                res.send({
-                    status: 200,
-                    success: true,
-                    message: "Restaurant Created Successfuly.",
-                    data: { requests }
+            await User.updateUser(req.body.user_id, { role_id: 2 }).then(async (data) => {
+                await Restaurant.getRestaurantById(result.insertId).then((restaurant) => {
+                    var requests = [{ restaurant }]
+                    res.send({
+                        status: 200,
+                        success: true,
+                        message: "Restaurant Created Successfuly.",
+                        data: { requests }
+                    })
+                }).catch((error) => {
+                    res.send({
+                        success: false,
+                        error,
+                        message: 'error level 3'
+                    })
                 })
+            }).catch((error) => {
+                res.send({
+                    success: false,
+                    error,
+                    message: 'error level 2'
+                })
+            })
+        }).catch((error) => {
+            res.send({
+                success: false,
+                error,
+                message: 'error level 1'
             })
         })
     })
