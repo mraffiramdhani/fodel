@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken'),
 
 // working as intended
 module.exports.list_all_users = async (req, res) => {
+    const { id, username } = req.auth
     return redis.get('index_user', async (ex, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
@@ -20,7 +21,7 @@ module.exports.list_all_users = async (req, res) => {
                 data: resultJSON
             });
         } else {
-            const data = await User.getAllUser()
+            const data = await User.getAllUser(id)
             redis.setex('index_user', 600, JSON.stringify(data))
             return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database Query', data })
         }
@@ -79,7 +80,8 @@ module.exports.check_token = async (req, res) => {
         }
         res.status(200).send({
             success: true,
-            role
+            role,
+            name: auth_data.name
         })
     }).catch((error) => {
         res.status(400).send({

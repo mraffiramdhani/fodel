@@ -11,9 +11,9 @@ var User = function User(user) {
     this.updated_at = new Date()
 }
 
-User.getAllUser = () => {
+User.getAllUser = (userId) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from users', (err, res, fields) => {
+        conn.query('select * from users where id != ?', [userId], (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
