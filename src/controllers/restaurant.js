@@ -51,7 +51,7 @@ module.exports.show_restaurant = async (req, res) => {
                 await User.getUserById(data[0].user_id).then(async (user) => {
                     await Item.getItemByRestaurant(id).then((items) => {
                         var requests = [{ restaurant: data, items }]
-                        redis.setex(`show_rest_id:${id}`, 600, JSON.stringify({ requests, owner: user[0].name }))
+                        redis.setex(`show_rest_id:${id}`, 30, JSON.stringify({ requests, owner: user[0].name }))
                         res.send({
                             status: 200,
                             success: true,
