@@ -39,7 +39,7 @@ module.exports = (app) => {
         .post(auth, hasRole(['administrator', 'restaurant']), Categories.create_category)
 
     app.route('/category/:id')
-	.get(auth, hasRole(['administrator', 'restaurant']), Categories.get_category_by_id)
+        .get(auth, hasRole(['administrator', 'restaurant']), Categories.get_category_by_id)
         .patch(auth, hasRole(['administrator', 'restaurant']), Categories.update_category)
         .delete(auth, hasRole(['administrator', 'restaurant']), Categories.delete_category)
 
@@ -63,6 +63,9 @@ module.exports = (app) => {
         .get(Items.show_item)
         .patch(auth, hasRole('restaurant'), Items.update_item)
         .delete(auth, hasRole('restaurant'), Items.delete_item)
+
+    app.route('/restaurant-item')
+        .get(auth, hasRole('restaurant'), Items.get_item_by_restaurant)
 
     app.route('/item/:id/images')
         .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item_images)

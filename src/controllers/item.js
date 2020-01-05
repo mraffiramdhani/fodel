@@ -98,7 +98,7 @@ module.exports.list_all_item = async (req, res) => {
 
 module.exports.show_item = async (req, res) => {
     const { id } = req.params
-    return redis.get(`shsow_item_${id}`, async (error, data) => {
+    return redis.get(`show_item_${id}`, async (error, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return res.status(200).json(resultJSON);
@@ -124,8 +124,22 @@ module.exports.show_item = async (req, res) => {
     })
 }
 
+module.exports.get_item_by_restaurant = async (req, res) => {
+    const { id } = req.auth
+    await Restaurant.getRestaurantByUser(id).then(async (data) => {
+        await Item.getItemByRestaurant(data[0].id).then((data) => {
+            return res.json({
+                status: 200,
+                success: true,
+                message: "Data Found",
+                data
+            })
+        })
+    })
+}
+
 module.exports.create_item = async (req, res) => {
-    req.body.restaurant_id = req.auth.id
+    const {id} = req.auth
     multer.uploadImages(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
@@ -137,6 +151,7 @@ module.exports.create_item = async (req, res) => {
             images.push(files[i])
         }
         req.body.image = images
+	req.body.restaurant_id = id
         await Item.createItem(new Item(req.body)).then((data) => {
             return res.json({
                 status: 200,

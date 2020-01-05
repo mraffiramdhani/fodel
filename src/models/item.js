@@ -121,6 +121,19 @@ Item.getItemByRestaurant = (id) => {
             })
         }
         return data
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const category = new Promise((resolve, reject) => {
+                conn.query('select c.name  from item_category ic inner join categories c on ic.category_id=c.id where ic.item_id=?', [data[i].id], (err, res) => {
+                    if(err) reject(err)
+                    resolve(res)
+                })
+            })
+            await category.then((result) => {
+                data[i] .category = result
+            })
+        }
+        return data
     })
 }
 

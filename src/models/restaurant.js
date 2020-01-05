@@ -41,6 +41,15 @@ Restaurant.getRestaurantById = (id) => {
     })
 }
 
+Restaurant.getRestaurantByUser = (userId) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from restaurants where user_id=?', [userId], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
 Restaurant.createRestaurant = (newData) => {
     const { name, logo, longitude, latitude, description, user_id, created_at, updated_at } = newData
     return new Promise((resolve, reject) => {
