@@ -74,27 +74,29 @@ module.exports.register_user = async (req, res) => {
     }
 }
 
-module.exports.check_token = (req, res) => {
+module.exports.check_token = async (req, res) => {
     const { token } = req.body
-    RevToken.isRevoked(token, (err, result) => {
+    await RevToken.isRevoked(token).then((result) => {
         const auth_data = jwt.verify(token, process.env.APP_KEY)
         if (result.length === 0) {
-            var role = ''
             if (auth_data.role_id === 1) {
-                role = 'administrator'
+                res.status(200).send({
+                    success: true,
+                    role: 'administrator',
+                    name: auth_data.name
+                })
             } else if (auth_data.role_id === 2) {
-                role = 'restaurant'
+                res.status(200).send({
+                    success: true,
+                    role: 'restaurant',
+                    name: auth_data.name
+                })
             } else if (auth_data.role_id === 3) {
                 res.status(200).send({
                     success: false,
                     message: "You Don't Have The Right User Privileges To Access The Content."
                 })
             }
-            res.status(200).send({
-                success: true,
-                role,
-                name: auth_data.name
-            })
         } else {
             res.status(200).send({
                 success: false,
@@ -102,36 +104,6 @@ module.exports.check_token = (req, res) => {
             })
         }
     })
-    // .then((result) => {
-    //     const auth_data = jwt.verify(token, process.env.APP_KEY)
-    //     if (result.length === 0) {
-    //         if (auth_data.role_id === 1) {
-    //             role = 'administrator'
-    //         } else if (auth_data.role_id === 2) {
-    //             role = 'restaurant'
-    //         } else if (auth_data.role_id === 3) {
-    //             res.status(200).send({
-    //                 success: false,
-    //                 message: "You Don't Have The Right User Privileges To Access The Content."
-    //             })
-    //         }
-    //         res.status(200).send({
-    //             success: true,
-    //             role,
-    //             name: auth_data.name
-    //         })
-    //     } else {
-    //         res.status(200).send({
-    //             success: false,
-    //             message: "Session Expired. Please Log In Again."
-    //         })
-    //     }
-    // }).catch((error) => {
-    //     res.status(400).send({
-    //         success: false,
-    //         error
-    //     })
-    // })
 }
 
 module.exports.login_user = async (req, res) => {

@@ -20,25 +20,12 @@ RevToken.putToken = (str_token, result) => {
         })
 }
 
-RevToken.isRevoked = (token, result) => {
-    conn.query('select * from revoked_token where token=? and is_revoked=1', [token], (err, res) => {
-        if (err) {
-            result(null, err)
-        } else {
-            result(null, res)
-        }
+RevToken.isRevoked = (token) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select * from revoked_token where token=? and is_revoked=1', [token], (err, res) => {
+            resolve(res)
+        })
     })
-    // return new Promise((resolve, reject) => {
-    //     conn.query('select * from revoked_token where token=? and is_revoked=1', [token], (err, res) => {
-    //         if (res.length > 0) {
-    //             console.log('session expired', res)
-    //             reject("Session Expired. Please Log In Again.")
-    //         } else {
-    //             console.log('no similiar session', res)
-    //             resolve(res)
-    //         }
-    //     })
-    // })
 }
 
 RevToken.revokeToken = (str_token, result) => {
