@@ -11,10 +11,16 @@ module.exports.list_all_category = (req, res) => {
             return res.status(200).json(resultJSON);
         } else {
             const data = await Category.getAllCategories()
-            redis.setex('all_cat', 600, JSON.stringify({ status: 200, success: true, message: "Data Found", source: 'Redis Cache', data }))
+            redis.setex('all_cat', 30, JSON.stringify({ status: 200, success: true, message: "Data Found", source: 'Redis Cache', data }))
             return res.status(200).json({ status: 200, success: true, message: "Data Found", source: 'Database query', data })
         }
     })
+}
+
+module.exports.get_category_by_id = async (req, res) => {
+	const {id} = req.params
+	const data = await Category.getCategoryById(id)
+	return res.status(200).json({status:200,success:true,message:"Data Found",data})
 }
 
 // working as intended

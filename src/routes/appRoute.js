@@ -39,6 +39,7 @@ module.exports = (app) => {
         .post(auth, hasRole(['administrator', 'restaurant']), Categories.create_category)
 
     app.route('/category/:id')
+	.get(auth, hasRole(['administrator', 'restaurant']), Categories.get_category_by_id)
         .patch(auth, hasRole(['administrator', 'restaurant']), Categories.update_category)
         .delete(auth, hasRole(['administrator', 'restaurant']), Categories.delete_category)
 

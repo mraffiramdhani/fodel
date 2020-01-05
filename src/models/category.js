@@ -14,6 +14,15 @@ Category.getAllCategories = () => {
     })
 }
 
+Category.getCategoryById = (id) => {
+	return new Promise((resolve, reject) => {
+		conn.query('select * from categories where id = ?', [id], (err,res) => {
+			if(err) reject(err)
+			resolve(res)
+		})
+	})
+}
+
 Category.createCategory = (newCat) => {
     const { name } = newCat
 
