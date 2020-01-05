@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken'),
 
 // working as intended
 module.exports.list_all_users = async (req, res) => {
-    const { id, username } = req.auth
+    const { id } = req.auth
     return redis.get('index_user', async (ex, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
@@ -26,6 +26,12 @@ module.exports.list_all_users = async (req, res) => {
             return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database Query', data })
         }
     })
+}
+
+module.exports.get_user_by_id = async (req, res) => {
+    const { id } = req.params
+    const data = await User.getUserById(id)
+    return res.status(200).send({ status: 200, success: true, message: "Data Found", data })
 }
 
 //working as intended
@@ -164,7 +170,7 @@ module.exports.update_user = async (req, res) => {
     var new_user = new User(req.body)
     const { id } = req.params
 
-    if (!new_user.name || !new_user.username || !new_user.password || !new_user.role_id) {
+    if (!new_user.name || !new_user.username || !new_user.role_id) {
         res.status(400).send({
             error: true,
             message: "Please provide a valid data"

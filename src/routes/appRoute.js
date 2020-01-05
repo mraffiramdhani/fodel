@@ -24,6 +24,7 @@ module.exports = (app) => {
         .post(auth, hasRole('administrator'), Users.create_user)
 
     app.route('/user/:id')
+        .get(auth, hasRole('administrator'), Users.get_user_by_id)
         .patch(auth, hasRole(['customer', 'administrator']), Users.update_user)
         .delete(auth, hasRole('administrator'), Users.delete_user)
 
