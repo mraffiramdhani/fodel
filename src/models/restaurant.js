@@ -23,6 +23,15 @@ Restaurant.getAllRestaurant = () => {
     })
 }
 
+Restaurant.getRestaurantOwner = (id) => {
+    return new Promise((resolve, reject) => {
+        conn.query('select name from users where id = ?', [id], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
 Restaurant.getRestaurantById = (id) => {
     return new Promise((resolve, reject) => {
         conn.query('select * from restaurants where id=?', id, (err, res, fields) => {

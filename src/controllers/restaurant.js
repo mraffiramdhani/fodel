@@ -7,7 +7,7 @@ var Restaurant = require('../models/restaurant'),
 
 //working as intended
 module.exports.list_all_restaurant = async (req, res) => {
-    return redis.get('index_restaurant', async (err, data) => {
+    return redis.get('index_restsaaurant', async (err, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return res.status(200).send({
@@ -18,7 +18,14 @@ module.exports.list_all_restaurant = async (req, res) => {
                 data: resultJSON
             });
         } else {
-            const data = await Restaurant.getAllRestaurant()
+            const data = await Restaurant.getAllRestaurant().then(async (result) => {
+                for (var i = 0; i < result.requests.length; i++) {
+                    await Restaurant.getRestaurantOwner(result.requests[i].user_id).then((res) => {
+                        result.requests[i].owner = res[0].name
+                    })
+                }
+                return result
+            })
             redis.setex('index_restaurant', 600, JSON.stringify(data))
             return res.status(200).send({ status: 200, success: true, message: "Data Found", source: 'Database Query', data: data })
         }

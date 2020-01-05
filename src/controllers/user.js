@@ -22,7 +22,7 @@ module.exports.list_all_users = async (req, res) => {
             });
         } else {
             const data = await User.getAllUser(id)
-            redis.setex('index_user', 600, JSON.stringify(data))
+            redis.setex('index_user', 30, JSON.stringify(data))
             return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database Query', data })
         }
     })
@@ -117,9 +117,7 @@ module.exports.login_user = async (req, res) => {
     } else {
         const user = await User.getUserByUsername(username)
         if (user.length > 0) {
-            console.log('User Controller login user - username verified')
             if (bcrypt.compareSync(password, user[0].password)) {
-                console.log('User Controller login user - password verified')
                 const { id, name, role_id } = user[0]
                 const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
                 var put_token = new RevToken({ token })
