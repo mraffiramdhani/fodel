@@ -3,7 +3,6 @@
 const Category = require('../models/category'),
     redis = require('../redis');
 
-// working as intended
 module.exports.list_all_category = (req, res) => {
     return redis.get('all_cat', async (ex, result) => {
         if (result) {

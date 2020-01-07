@@ -16,7 +16,7 @@ module.exports.list_all_users = async (req, res) => {
             return response(res, 200, true, "Data Found - Redis Cache", resultJSON)
         } else {
             const data = await User.getAllUser(id)
-            redis.setex('index_user', 60, JSON.stringify(data))
+            redis.setex('index_user', 10, JSON.stringify(data))
             return response(res, 200, true, "Data Found - Database Query", data)
         }
     })
