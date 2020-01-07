@@ -6,7 +6,8 @@ exports.up = function (knex) {
         table.string('username')
         table.string('password')
         table.integer('role_id').unsigned()
-        table.timestamps()
+        table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
+        table.dateTime('updated_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
         table.unique('username')
         table.foreign('role_id').references('roles.id').onDelete('cascade').onUpdate('cascade')
