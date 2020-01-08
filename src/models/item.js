@@ -13,9 +13,47 @@ var Item = function Item(item) {
     this.updated_at = new Date()
 }
 
-Item.getAllItem = (limit) => {
+Item.getItemCount = (search, sort) => {
+    var sql = 'select count(*) as iCount from items'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' WHERE ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
     return new Promise((resolve, reject) => {
-        conn.query('select * from items i limit ' + limit, (err, res, fields) => {
+        conn.query(sql, (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Item.getAllItem = (search, sort, limit) => {
+    var sql = 'select * from items'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' WHERE ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
+    if (limit !== '') {
+        sql += ' limit ' + limit
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
@@ -35,41 +73,10 @@ Item.getAllItem = (limit) => {
     })
 }
 
-Item.getNumRows = () => {
-    return new Promise((resolve, reject) => {
-        conn.query('select count(*) as numRows from items', (err, res) => {
-            if (err) reject(err)
-            resolve(res)
-        })
-    })
-}
-
-Item.getNumRowsParam = (params) => {
-    var { name, rating, min_price, max_price, sort, type, cat } = params
-
-    if (sort === 'rating') sort = `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id)`
-    const fixedSort = sort ? `order by ` + sort + ' ' + type : `` || `order by updated_at asc`
-    var sql = `select count(distinct id) as numRows from items i `
-        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
-        + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
-        + fixedSort + ` `
-
-    // console.log(sql)
-    return new Promise((resolve, reject) => {
-        conn.query(sql, params, (err, res, fields) => {
-            if (err) reject(err)
-            resolve(res)
-        })
-    })
-}
-
 Item.getItemById = (id) => {
     return new Promise((resolve, reject) => {
         conn.query('select * from items where id=?', id, (err, res, fields) => {
-            if (res.length == 0) reject("Data not Found")
+            if (err) reject(err)
             resolve(res)
         })
     }).then((item) => {
@@ -77,26 +84,16 @@ Item.getItemById = (id) => {
             conn.query('select * from categories c inner join item_category ic on c.id = ic.category_id where ic.item_id=?',
                 [id], (err, categories) => {
                     if (err) reject(err)
-                    var requests = [{ item }]
-                    var related = []
-                    requests[0].item[0].categories = categories
-                    resolve({ requests, related })
+                    item[0].categories = categories
+                    resolve(item)
                 })
         })
-    }).then((requests) => {
+    }).then((item) => {
         return new Promise((resolve, reject) => {
             conn.query('select * from item_images where item_id=?', [id], (err, images) => {
                 if (err) reject(err)
-                requests.requests[0].item[0].images = images
-                resolve(requests)
-            })
-        })
-    }).then((requests) => {
-        return new Promise((resolve, reject) => {
-            conn.query('select * from reviews where item_id=?', [id], (err, reviews) => {
-                if (err) reject(err)
-                requests.requests[0].item[0].reviews = reviews
-                resolve(requests)
+                item[0].images = images
+                resolve(item)
             })
         })
     })
@@ -125,72 +122,65 @@ Item.getItemByRestaurant = (id) => {
         for (var i = 0; i < data.length; i++) {
             const category = new Promise((resolve, reject) => {
                 conn.query('select c.name  from item_category ic inner join categories c on ic.category_id=c.id where ic.item_id=?', [data[i].id], (err, res) => {
-                    if(err) reject(err)
+                    if (err) reject(err)
                     resolve(res)
                 })
             })
             await category.then((result) => {
-                data[i] .category = result
+                data[i].category = result
             })
         }
         return data
     })
 }
 
-Item.getItemByParams = (params, limit = null) => {
-    var { name, rating, min_price, max_price, sort, type, cat } = params
+// Item.getItemByParams = (params, limit = null) => {
+//     var { name, rating, min_price, max_price, sort, type, cat } = params
 
-    if (sort === 'rating') sort = `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id)`
-    const fixedSort = sort ? `order by ` + sort + ' ' + type : `` || `order by updated_at asc`
+//     if (sort === 'rating') sort = `(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id)`
+//     const fixedSort = sort ? `order by ` + sort + ' ' + type : `` || `order by updated_at asc`
 
-    var sql = `select distinct i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
-        + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
-        + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
-        + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
-        + fixedSort + ` `
-        + ((limit) ? `limit ` + limit : ``)
+//     var sql = `select distinct i.*, (select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) rating from items i `
+//         + ((cat) ? `inner join item_category as ic on i.id = ic.item_id where ic.category_id in (${cat}) ${((rating || name || min_price || max_price) ? `and ` : ``)}` : ``)
+//         + ((rating) ? `${((!cat) ? `where ` : ``)}(select round(AVG(rating), 1) r from reviews where reviews.item_id=i.id) between ${rating - 1} and ${rating} ${((name || min_price || max_price) ? `and ` : ``)}` : ``)
+//         + ((name) ? `${((!cat && !rating) ? `where ` : ``)}name like '%${name}%' ${((min_price || max_price) ? `and ` : ``)}` : ``)
+//         + ((min_price) ? `${((!cat && !rating && !name) ? `where ` : ``)}price >= ${min_price} ${((max_price) ? `and ` : ``)}` : ``)
+//         + ((max_price) ? `${((!cat && !rating && !name && !min_price) ? `where ` : ``)}price <= ${max_price} ` : ``)
+//         + fixedSort + ` `
+//         + ((limit) ? `limit ` + limit : ``)
 
-    // console.log(sql)
-    return new Promise((resolve, reject) => {
-        conn.query(sql, params, (err, res, fields) => {
-            if (err) reject(err)
-            resolve(res)
-        })
-    }).then(async (data) => {
-        for (var i = 0; i < data.length; i++) {
-            const image = new Promise((resolve, reject) => {
-                conn.query('select filename from item_images where item_id=?', [data[i].id], (err, res) => {
-                    if (err) reject(err)
-                    resolve(res)
-                })
-            })
-            await image.then((result) => {
-                data[i].images = result
-            })
-        }
-        return data
-    })
-}
+//     // console.log(sql)
+//     return new Promise((resolve, reject) => {
+//         conn.query(sql, params, (err, res, fields) => {
+//             if (err) reject(err)
+//             resolve(res)
+//         })
+//     }).then(async (data) => {
+//         for (var i = 0; i < data.length; i++) {
+//             const image = new Promise((resolve, reject) => {
+//                 conn.query('select filename from item_images where item_id=?', [data[i].id], (err, res) => {
+//                     if (err) reject(err)
+//                     resolve(res)
+//                 })
+//             })
+//             await image.then((result) => {
+//                 data[i].images = result
+//             })
+//         }
+//         return data
+//     })
+// }
 
 Item.createItem = async (newItem) => {
-    const { name, price, description, image, category, restaurant_id, created_at, updated_at } = newItem
+    const { name, price, description, image, category, restaurant_id } = newItem
 
     return new Promise((resolve, reject) => {
-        conn.query('select id from restaurants where user_id=?', [restaurant_id], (err, res) => {
-            if (err) reject(err)
-            resolve(res[0].id)
-        })
-    }).then((result) => {
-        return new Promise((resolve, reject) => {
-            conn.query('insert into items(name, price, description, restaurant_id, created_at, updated_at) values(?,?,?,?,?,?)',
-                [name, price, description, result, created_at, updated_at],
-                (err, res, fields) => {
-                    if (err) reject(err)
-                    resolve(res)
-                })
-        })
+        conn.query('insert into items(name, price, description, restaurant_id) values(?,?,?,?)',
+            [name, price, description, restaurant_id],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
     }).then((response) => {
         const cat = category.split(',')
         var sql = 'insert into item_category(item_id, category_id) values'
@@ -220,34 +210,26 @@ Item.createItem = async (newItem) => {
         return new Promise((resolve, reject) => {
             conn.query('select * from items where id=?', [response.insertId], (error, item) => {
                 if (error) reject(error)
-                var requests = [{ item }]
-                resolve(requests)
+                response = item
+                resolve(response)
             })
         })
-    }).then((requests) => {
+    }).then((response) => {
         return new Promise((resolve, reject) => {
-            conn.query('select filename from item_images where item_id=?', [requests[0].item[0].id], (error, images) => {
+            conn.query('select filename from item_images where item_id=?', [response[0].id], (error, images) => {
                 if (error) reject(error)
-                requests[0].item[0].images = images
-                resolve(requests)
+                response[0].images = images
+                resolve(response)
             })
         })
-    }).then((requests) => {
+    }).then((response) => {
         const cat = category.split(',')
         var sql = `select * from categories where id in (${cat})`
         return new Promise((resolve, reject) => {
             conn.query(sql, [], (error, categories) => {
                 if (error) reject(error)
-                requests[0].item[0].categories = categories
-                resolve(requests)
-            })
-        })
-    }).then((requests) => {
-        return new Promise((resolve, reject) => {
-            conn.query('select * from reviews where item_id=?', [requests[0].item[0].id], (error, reviews) => {
-                if (error) reject(error)
-                requests[0].item[0].reviews = reviews
-                resolve({ requests })
+                response[0].categories = categories
+                resolve(response)
             })
         })
     }).catch((errLog) => {
@@ -256,22 +238,15 @@ Item.createItem = async (newItem) => {
 }
 
 Item.updateItem = (id, data) => {
-    const { name, price, description, restaurant_id, category, updated_at } = data
+    const { name, price, description, restaurant_id, category } = data
 
     return new Promise((resolve, reject) => {
-        conn.query('select id from restaurants where user_id=?', [restaurant_id], (err, res) => {
-            if (res.length == 0) reject(err)
-            resolve(res[0].id)
-        })
-    }).then((result) => {
-        return new Promise((resolve, reject) => {
-            conn.query('update items set name=?, price=?, description=?, updated_at=? where id=? and restaurant_id=?',
-                [name, price, description, updated_at, id, result],
-                (err, res, fields) => {
-                    if (err) reject(err)
-                    resolve(res)
-                })
-        })
+        conn.query('update items set name=?, price=?, description=? where id=? and restaurant_id=?',
+            [name, price, description, id, restaurant_id],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
     }).then((response) => {
         const cat = category.split(',')
         var sql = `delete from item_category where item_id=${id};insert into item_category(item_id, category_id) values`
@@ -280,46 +255,36 @@ Item.updateItem = (id, data) => {
             add_str.push(`(${id}, ${cat[i]})`)
         }
         return new Promise((resolve, reject) => {
-            conn.query(sql + add_str.join(','), (error, rows) => {
+            conn.query(sql + add_str.join(','), (error, res) => {
                 if (error) reject(error)
-                var requests = [{}]
-                resolve({ requests })
+                resolve(res)
             })
         })
-    }).then((requests) => {
+    }).then((response) => {
         var sql = 'select * from items where id=?'
         return new Promise((resolve, reject) => {
-            conn.query(sql, [id], (error, item) => {
+            conn.query(sql, [id], (error, res) => {
                 if (error) reject(error)
-                requests.requests[0].item = item
-                resolve(requests)
+                resolve(res)
             })
         })
-    }).then((requests) => {
+    }).then((response) => {
         var sql = 'select filename from item_images where item_id=?'
         return new Promise((resolve, reject) => {
             conn.query(sql, [id], (error, images) => {
                 if (error) reject(error)
-                requests.requests[0].item[0].images = images
-                resolve(requests)
+                response[0].images = images
+                resolve(response)
             })
         })
-    }).then((requests) => {
+    }).then((response) => {
         const cat = category.split(',')
         var sql = `select * from categories where id in (${cat})`
         return new Promise((resolve, reject) => {
             conn.query(sql, [], (error, categories) => {
                 if (error) reject(error)
-                requests.requests[0].item[0].categories = categories
-                resolve(requests)
-            })
-        })
-    }).then((requests) => {
-        return new Promise((resolve, reject) => {
-            conn.query('select * from reviews where item_id=?', [id], (error, reviews) => {
-                if (error) reject(error)
-                requests.requests[0].item[0].reviews = reviews
-                resolve(requests)
+                response[0].categories = categories
+                resolve(response)
             })
         })
     }).catch((errLog) => {
@@ -336,27 +301,19 @@ Item.updatedItemImages = (id, data) => {
     return new Promise((resolve, reject) => {
         conn.query(sql + arr_img.join(','), (error, result) => {
             if (error) reject(error)
-            var requests = []
-            resolve({ requests })
+            resolve(result)
         })
     })
 }
 
-Item.deleteItem = (id, user_id) => {
+Item.deleteItem = (id, restaurant_id) => {
     return new Promise((resolve, reject) => {
-        conn.query('select id from restaurants where user_id=?', [user_id], (err, res) => {
-            if (res.length == 0) reject(err)
-            resolve(res[0].id)
-        })
-    }).then((result) => {
-        return new Promise((resolve, reject) => {
-            conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=? and restaurant_id=?',
-                [id, id, id, result],
-                (err, res, fields) => {
-                    if (err) reject(err)
-                    resolve({ requests: [] })
-                })
-        })
+        conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=? and restaurant_id=?',
+            [id, id, id, restaurant_id],
+            (err, res, fields) => {
+                if (err) reject(err)
+                resolve(res)
+            })
     })
 }
 

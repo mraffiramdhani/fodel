@@ -3,97 +3,65 @@
 const Item = require('../models/item'),
     Restaurant = require('../models/restaurant'),
     redis = require('../redis'),
-    multer = require('../multer');
+    multer = require('../multer'),
+    { response } = require('../helper/response');
 
 module.exports.list_all_item = async (req, res) => {
-    const { name, rating, min_price, max_price, sort, type, cat } = req.query
-    var numRows
-    var numPerPage = parseInt(req.query.max_item, 10) || 10
-    var page = parseInt(req.query.page) || 0
-    var numPages
-    var skip = page * numPerPage
-
-    if (!name && !rating && !min_price && !max_price && !sort && !type && !cat) {
-        await Item.getNumRows().then((results) => {
-            numRows = results[0].numRows
-            numPages = Math.ceil(numRows / numPerPage)
+    const { search, sort } = req.query
+    var pageLinks = process.env.APP_URI.concat('item?')
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(`search[${key}]=${search[key]}`)
         })
-
-        var limit = skip + ',' + numPerPage
-        return redis.get(`all_item_page:${page}_limit:${numPerPage}`, async (ex, data) => {
-            if (data) {
-                const responseJSON = JSON.parse(data);
-                return res.status(200).send({
-                    status: 200,
-                    success: true,
-                    message: 'Data Found',
-                    dataSource: 'Redis Cache',
-                    data: responseJSON
-                });
-            } else {
-                await Item.getAllItem(limit).then((items) => {
-                    var requests = [{ items }]
-                    var responsePayload = { requests }
-                    if (page < numPages) {
-                        responsePayload.pagination = {
-                            current: page + 1,
-                            perPage: numPerPage,
-                            prev: page + 1 > 1 ? page : undefined,
-                            next: page + 1 < numPages - 1 ? page + 2 : undefined
-                        }
-                    } else responsePayload.pagination = {
-                        err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
-                    }
-                    redis.setex(`all_item_page:${page}_limit:${numPerPage}`, 600, JSON.stringify({ ...responsePayload }))
-                    var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data: x_data })
-                }).catch(function (err) {
-                    console.error(err);
-                    res.json({ err: err });
-                })
-            }
-        })
-    } else {
-        await Item.getNumRowsParam(req.query).then((results) => {
-            numRows = results[0].numRows
-            numPages = Math.ceil(numRows / numPerPage)
-        })
-
-        var limit = numRows >= 10 ? skip + ',' + numPerPage : null
-        return redis.get(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, async (ex, data) => {
-            if (data) {
-                const responseJSON = JSON.parse(data);
-                return res.status(200).json({
-                    status: 200,
-                    success: true,
-                    message: 'Data Found',
-                    dataSource: 'Redis Cache',
-                    data: responseJSON
-                });
-            } else {
-                await Item.getItemByParams(req.query, limit).then((items) => {
-                    var requests = [{ items }]
-                    var responsePayload = { requests }
-                    if (page < numPages) {
-                        responsePayload.pagination = {
-                            current: page + 1,
-                            perPage: numPerPage,
-                            prev: page + 1 > 1 ? page : undefined,
-                            next: page + 1 < numPages ? page + 2 : undefined
-                        }
-                    } else responsePayload.pagination = {
-                        err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
-                    }
-                    redis.setex(`search_item:${name},${rating},${min_price},${max_price},${sort},${type},${cat}_page:${page}_limit:${limit}`, 600, JSON.stringify({ ...responsePayload }))
-                    var x_data = { ...responsePayload }
-                    return res.status(200).send({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data: x_data })
-                }).catch(function (err) {
-                    console.error(err);
-                    res.json({ err: err });
-                })
-            }
+        pageLinks += arr.join('&') + '&'
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            pageLinks += `sort[${key}]=${sort[key]}&`
         })
     }
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    await Item.getItemCount(search, sort).then((count) => {
+        numRows = count[0].iCount
+        numPages = Math.ceil(numRows / numPerPage)
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
+    })
+    var limit = skip + ',' + numPerPage
+    return redis.get(`index_item_page:${page}_limit:${limit}`, async (ex, data) => {
+        if (data) {
+            const resultJSON = JSON.parse(data);
+            return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
+        } else {
+            const items = await Item.getAllItem(search, sort, limit)
+            if (items) {
+                var result = {
+                    items
+                }
+                if (page <= numPages) {
+                    result.pagination = {
+                        current: page,
+                        perPage: numPerPage,
+                        prev: page > 1 ? page - 1 : undefined,
+                        next: page < numPages ? page + 1 : undefined,
+                        prevLink: page > 1 ? encodeURI(pageLinks.concat(`page=${page - 1}&perPage=${numPerPage}`)) : undefined,
+                        nextLink: page < numPages ? encodeURI(pageLinks.concat(`page=${page + 1}&perPage=${numPerPage}`)) : undefined
+                    }
+                } else result.pagination = {
+                    err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
+                }
+                redis.setex(`index_item_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                return response(res, 200, true, "Data Found - Database Query.", result)
+            } else {
+                return response(res, 200, false, "Data not Found.")
+            }
+        }
+    })
 }
 
 module.exports.show_item = async (req, res) => {
@@ -101,24 +69,17 @@ module.exports.show_item = async (req, res) => {
     return redis.get(`show_item_${id}`, async (error, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
-            return res.status(200).json(resultJSON);
+            return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
         } else {
             await Item.getItemById(id).then(async (data) => {
-                await Restaurant.getRestaurantById(data.requests[0].item[0].restaurant_id).then(async (restaurant) => {
-                    var cat = []
-                    for (var i = 0; i < data.requests[0].item[0].categories.length; i++) {
-                        cat.push(data.requests[0].item[0].categories[i].category_id)
-                    }
-                    await Item.getItemByParams({ cat: cat.join(','), sort: "rating", type: "desc" }).then((rows) => {
-                        var arr_req = data.related
-                        arr_req.push({ restaurant })
-                        arr_req.push({ showcase: rows })
-
-                        // console.log(data)
-                        redis.setex(`show_item_${id}`, 600, JSON.stringify({ status: 200, success: true, message: 'Data Found', dataSource: 'Redis Cache', data }))
-                        return res.status(200).json({ status: 200, success: true, message: 'Data Found', dataSource: 'Database query', data })
-                    })
-                })
+                if (data) {
+                    redis.setex(`show_item_${id}`, 30, JSON.stringify(data[0]))
+                    return response(res, 200, true, "Data Found - Database Query.", data[0])
+                } else {
+                    return response(res, 200, false, "Data not Found")
+                }
+            }).catch((error) => {
+                return response(res, 200, false, "Error.", error)
             })
         }
     })
@@ -139,7 +100,8 @@ module.exports.get_item_by_restaurant = async (req, res) => {
 }
 
 module.exports.create_item = async (req, res) => {
-    const {id} = req.auth
+    const { id } = req.auth
+
     multer.uploadImages(req, res, async () => {
         if (req.fileValidationError) {
             return res.end(req.fileValidationError)
@@ -151,29 +113,32 @@ module.exports.create_item = async (req, res) => {
             images.push(files[i])
         }
         req.body.image = images
-	req.body.restaurant_id = id
+        const restaurant = await Restaurant.getRestaurantByUser(id)
+        req.body.restaurant_id = restaurant[0].id
         await Item.createItem(new Item(req.body)).then((data) => {
-            return res.json({
-                status: 200,
-                success: true,
-                message: "Item Created Successfuly.",
-                data
-            })
+            if (data.effectedRows !== 0) {
+                return response(res, 200, true, "Item Created Successfully.", data[0])
+            } else {
+                return response(res, 200, false, "Creating Item Failed.", data)
+            }
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
         })
     })
 }
 
-// working asn intended
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
-    req.body.restaurant_id = req.auth.id
+    const restaurant = await Restaurant.getRestaurantByUser(req.auth.id)
+    req.body.restaurant_id = restaurant[0].id
     await Item.updateItem(id, new Item(req.body)).then((data) => {
-        return res.json({
-            status: 200,
-            success: true,
-            message: "Item Updated Successfuly.",
-            data
-        })
+        if (data.affectedRows !== 0) {
+            return response(res, 200, true, "Item Updated Successfully.", data[0])
+        } else {
+            return response(res, 200, false, "Updating Item Failed.", data)
+        }
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
     })
 }
 
@@ -190,32 +155,29 @@ module.exports.update_item_images = (req, res) => {
             images.push(files[i])
         }
         await Item.updatedItemImages(id, images).then(async (data) => {
-            await Item.getItemById(id).then((requests) => {
-                return res.json({
-                    status: 200,
-                    success: true,
-                    message: "Item Images Updated Successfuly.",
-                    data: requests
-                })
+            await Item.getItemById(id).then((item) => {
+                if (item) {
+                    return response(res, 200, true, "Item Images Updated Successfully.", item[0])
+                } else {
+                    return response(res, 200, false, "Updating Item Images Failed.")
+                }
+            }).catch((error) => {
+                return response(res, 200, false, "Error.", error)
             })
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
         })
     })
 
 }
 
-// working as intended
 module.exports.delete_item = async (req, res) => {
     const { id } = req.params
-    const user_id = req.auth.id
 
-    await Item.deleteItem(id, user_id).then((data) => {
-        res.send({
-            status: 200,
-            success: true,
-            message: "Item Removed Successfuly.",
-            data
-        })
+    const restaurant = await Restaurant.getRestaurantByUser(req.auth.id)
+    await Item.deleteItem(id, restaurant[0].id).then((data) => {
+        return response(res, 200, true, "Item Deleted Successfully.")
     }).catch((error) => {
-        res.send(error)
+        return response(res, 200, false, "Error.", error)
     })
 }
