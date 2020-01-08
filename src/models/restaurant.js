@@ -16,16 +16,7 @@ var Restaurant = function Restaurant(data) {
 
 Restaurant.getAllRestaurant = () => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from restaurants', (err, requests, fields) => {
-            if (err) reject(err)
-            resolve({ requests })
-        })
-    })
-}
-
-Restaurant.getRestaurantOwner = (id) => {
-    return new Promise((resolve, reject) => {
-        conn.query('select name from users where id = ?', [id], (err, res) => {
+        conn.query('select * from restaurants', (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
@@ -51,11 +42,11 @@ Restaurant.getRestaurantByUser = (userId) => {
 }
 
 Restaurant.createRestaurant = (newData) => {
-    const { name, logo, longitude, latitude, description, user_id, created_at, updated_at } = newData
+    const { name, logo, longitude, latitude, description, user_id } = newData
     return new Promise((resolve, reject) => {
         conn.query(
-            'INSERT INTO restaurants(name, logo, longitude, latitude, description, user_id, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)',
-            [name, logo, longitude, latitude, description, user_id, created_at, updated_at],
+            'INSERT INTO restaurants(name, logo, longitude, latitude, description, user_id) VALUES(?,?,?,?,?,?)',
+            [name, logo, longitude, latitude, description, user_id],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)

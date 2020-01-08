@@ -4,69 +4,73 @@ var Restaurant = require('../models/restaurant'),
     User = require('../models/user'),
     Item = require('../models/item'),
     redis = require('../redis'),
-    multer = require('../multer');
+    multer = require('../multer'),
+    { response } = require('../helper/response');
 
-//working as intended
+
 module.exports.list_all_restaurant = async (req, res) => {
-    return redis.get('index_restsaaurant', async (err, data) => {
+    return redis.get('index_restaurant', async (err, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
-            return res.status(200).send({
-                status: 200,
-                success: true,
-                message: "Data Found",
-                source: 'Redis Cache',
-                data: resultJSON
-            });
+            return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
         } else {
-            const data = await Restaurant.getAllRestaurant().then(async (result) => {
-                for (var i = 0; i < result.requests.length; i++) {
-                    await Restaurant.getRestaurantOwner(result.requests[i].user_id).then((res) => {
-                        result.requests[i].owner = res[0].name
-                    })
+            const data = await Restaurant.getAllRestaurant().then(async (data) => {
+                if (data.length === 0) {
+                    return response(res, 200, false, "Data not Found.")
+                } else {
+                    for (var i = 0; i < data.length; i++) {
+                        await User.getUserById(data[i].user_id).then((user) => {
+                            data[i].owner = user[0].name
+                        }).catch((error) => {
+                            return response(res, 200, false, "Error.", error)
+                        })
+                    }
                 }
-                return result
+                return data
+            }).catch((error) => {
+                return response(res, 200, false, "Error.", error)
             })
-            redis.setex('index_restaurant', 600, JSON.stringify(data))
-            return res.status(200).send({ status: 200, success: true, message: "Data Found", source: 'Database Query', data: data })
+            if (data) {
+                redis.setex('index_restaurant', 10, JSON.stringify(data))
+                return response(res, 200, true, "Data Found - Database Query.", data)
+            } else {
+                return response(res, 200, false, "Data not Found.")
+            }
         }
     })
 }
 
-// working as intended
 module.exports.show_restaurant = async (req, res) => {
     const { id } = req.params
     return redis.get(`show_rest_id:${id}`, async (ex, data) => {
         if (data) {
             const responseJSON = JSON.parse(data)
-            return res.send({
-                status: 200,
-                success: true,
-                message: "Data Found",
-                dataSource: 'Redis Cache',
-                data: responseJSON
-            })
+            return response(res, 200, true, "Data Found - Redis Cache.", responseJSON)
         } else {
             await Restaurant.getRestaurantById(id).then(async (data) => {
-                await User.getUserById(data[0].user_id).then(async (user) => {
-                    await Item.getItemByRestaurant(id).then((items) => {
-                        var requests = [{ restaurant: data, items }]
-                        redis.setex(`show_rest_id:${id}`, 30, JSON.stringify({ requests, owner: user[0].name }))
-                        res.send({
-                            status: 200,
-                            success: true,
-                            message: "Data Found",
-                            dataSource: 'Database Query',
-                            data: { requests, owner: user[0].name }
-                        })
+                if (data.length !== 0) {
+                    await User.getUserById(data[0].user_id).then((user) => {
+                        if (user.length !== 0) {
+                            data[0].owner = user[0].name
+                            redis.setex(`show_rest_id:${id}`, 30, JSON.stringify(data[0]))
+                            return response(res, 200, true, "Data Found - Database Query.", data[0])
+                        } else {
+                            return response(res, 200, false, "Data not Found.")
+                        }
+                    }).catch((error) => {
+                        return response(res, 200, false, "Error.", error)
                     })
-                })
+                } else {
+                    return response(res, 200, false, "Data not Found.")
+                }
+            }).catch((error) => {
+                return response(res, 200, false, "Error.", error)
             })
         }
     })
 }
 
-// working as intended
+
 module.exports.create_restaurant = async (req, res) => {
     multer.uploadLogo(req, res, async () => {
         if (req.fileValidationError) {
@@ -107,7 +111,7 @@ module.exports.create_restaurant = async (req, res) => {
     })
 }
 
-// working as intended
+
 module.exports.update_restaurant = async (req, res) => {
     const { id } = req.params
 
@@ -124,7 +128,7 @@ module.exports.update_restaurant = async (req, res) => {
     })
 }
 
-// working as intended
+
 module.exports.update_restaurant_logo = async (req, res) => {
     const { id } = req.params
     multer.uploadLogo(req, res, async (err) => {
