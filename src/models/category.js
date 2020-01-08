@@ -5,9 +5,47 @@ var Category = function Category(category) {
     this.name = category.name
 }
 
-Category.getAllCategories = () => {
+Category.getCategoryCount = (search, sort) => {
+    var sql = 'select count(*) as cCount from categories'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' WHERE ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
     return new Promise((resolve, reject) => {
-        conn.query('select * from categories', (err, res, fields) => {
+        conn.query(sql, (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Category.getAllCategories = (search, sort, limit) => {
+    var sql = 'select * from categories'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' WHERE ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
+    if (limit !== '') {
+        sql += ' limit ' + limit
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })

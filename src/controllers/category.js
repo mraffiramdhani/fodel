@@ -4,16 +4,57 @@ const Category = require('../models/category'),
     redis = require('../redis'),
     { response } = require('../helper/response');
 
-module.exports.list_all_category = (req, res) => {
-    return redis.get('all_cat', async (ex, result) => {
+module.exports.list_all_category = async (req, res) => {
+    const { search, sort } = req.query
+    var pageLinks = process.env.APP_URI.concat('category?')
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(`search[${key}]=${search[key]}`)
+        })
+        pageLinks += arr.join('&') + '&'
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            pageLinks += `sort[${key}]=${sort[key]}&`
+        })
+    }
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    await Category.getCategoryCount(search, sort).then((count) => {
+        numRows = count[0].cCount
+        numPages = Math.ceil(numRows / numPerPage)
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
+    })
+    var limit = skip + ',' + numPerPage
+    return redis.get(`index_category_page:${page}_limit:${limit}`, async (ex, result) => {
         if (result) {
             const resultJSON = JSON.parse(result);
             return response(res, 200, true, "Data Found - Redis Cache", resultJSON)
         } else {
-            const data = await Category.getAllCategories()
-            if (data) {
-                redis.setex('all_cat', 10, JSON.stringify(data))
-                return response(res, 200, true, "Data Found - Database Query", data)
+            const categories = await Category.getAllCategories(search, sort, limit)
+            if (categories) {
+                var result = {
+                    categories
+                }
+                if (page <= numPages) {
+                    result.pagination = {
+                        current: page,
+                        perPage: numPerPage,
+                        prev: page > 1 ? page - 1 : undefined,
+                        next: page < numPages ? page + 1 : undefined,
+                        prevLink: page > 1 ? encodeURI(pageLinks.concat(`page=${page - 1}&perPage=${numPerPage}`)) : undefined,
+                        nextLink: page < numPages ? encodeURI(pageLinks.concat(`page=${page + 1}&perPage=${numPerPage}`)) : undefined
+                    }
+                } else result.pagination = {
+                    err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
+                }
+                redis.setex(`index_category_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                return response(res, 200, true, "Data Found - Database Query", result)
             } else {
                 return response(res, 200, false, "Data not Found")
             }
