@@ -11,9 +11,47 @@ var User = function User(user) {
     this.updated_at = new Date()
 }
 
-User.getAllUser = (userId) => {
+User.getUserCount = (userId, search, sort) => {
+    var sql = 'select count(*) as uCount from users where id != ?'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
     return new Promise((resolve, reject) => {
-        conn.query('select * from users where id != ?', [userId], (err, res, fields) => {
+        conn.query(sql, [userId], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+User.getAllUser = (userId, search, sort, limit) => {
+    var sql = 'select * from users where id != ?'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
+    if (limit !== '') {
+        sql += ' limit ' + limit
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql, [userId], (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })

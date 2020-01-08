@@ -10,15 +10,41 @@ const jwt = require('jsonwebtoken'),
 
 module.exports.list_all_users = async (req, res) => {
     const { id } = req.auth
-    return redis.get('index_user', async (ex, data) => {
+    const { search, sort } = req.query
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 0
+    var numPages
+    var skip = page * numPerPage
+    await User.getUserCount(id, search, sort).then((count) => {
+        numRows = count[0].uCount
+        numPages = Math.ceil(numRows / numPerPage)
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
+    })
+    var limit = skip + ',' + numPerPage
+    return redis.get(`index_user_page:${page}_limit:${limit}`, async (ex, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return response(res, 200, true, "Data Found - Redis Cache", resultJSON)
         } else {
-            const data = await User.getAllUser(id)
-            if (data) {
-                redis.setex('index_user', 10, JSON.stringify(data))
-                return response(res, 200, true, "Data Found - Database Query", data)
+            const users = await User.getAllUser(id, search, sort, limit)
+            if (users) {
+                var result = {
+                    users
+                }
+                if (page < numPages) {
+                    result.pagination = {
+                        current: page + 1,
+                        perPage: numPerPage,
+                        prev: page + 1 > 1 ? page : undefined,
+                        next: page + 1 < numPages - 1 ? page + 2 : undefined
+                    }
+                } else result.pagination = {
+                    err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
+                }
+                redis.setex(`index_user_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                return response(res, 200, true, "Data Found - Database Query", result)
             } else {
                 return response(res, 200, false, "Data not Found")
             }
