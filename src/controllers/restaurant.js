@@ -9,12 +9,38 @@ var Restaurant = require('../models/restaurant'),
 
 
 module.exports.list_all_restaurant = async (req, res) => {
-    return redis.get('index_restaurant', async (err, data) => {
+    const { search, sort } = req.query
+    var pageLinks = process.env.APP_URI.concat('restaurant?')
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(`search[${key}]=${search[key]}`)
+        })
+        pageLinks += arr.join('&') + '&'
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            pageLinks += `sort[${key}]=${sort[key]}&`
+        })
+    }
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    await Restaurant.getRestaurantCount(search, sort).then((count) => {
+        numRows = count[0].rCount
+        numPages = Math.ceil(numRows / numPerPage)
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
+    })
+    var limit = skip + ',' + numPerPage
+    return redis.get(`index_restaurant_page:${page}_limit:${limit}`, async (err, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
         } else {
-            const data = await Restaurant.getAllRestaurant().then(async (data) => {
+            const restaurants = await Restaurant.getAllRestaurant(search, sort, limit).then(async (data) => {
                 if (data.length === 0) {
                     return response(res, 200, false, "Data not Found.")
                 } else {
@@ -30,9 +56,24 @@ module.exports.list_all_restaurant = async (req, res) => {
             }).catch((error) => {
                 return response(res, 200, false, "Error.", error)
             })
-            if (data) {
-                redis.setex('index_restaurant', 10, JSON.stringify(data))
-                return response(res, 200, true, "Data Found - Database Query.", data)
+            if (restaurants) {
+                var result = {
+                    restaurants
+                }
+                if (page <= numPages) {
+                    result.pagination = {
+                        current: page,
+                        perPage: numPerPage,
+                        prev: page > 1 ? page - 1 : undefined,
+                        next: page < numPages ? page + 1 : undefined,
+                        prevLink: page > 1 ? encodeURI(pageLinks.concat(`page=${page - 1}&perPage=${numPerPage}`)) : undefined,
+                        nextLink: page < numPages ? encodeURI(pageLinks.concat(`page=${page + 1}&perPage=${numPerPage}`)) : undefined
+                    }
+                } else result.pagination = {
+                    err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
+                }
+                redis.setex(`index_restaurant_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                return response(res, 200, true, "Data Found - Database Query.", result)
             } else {
                 return response(res, 200, false, "Data not Found.")
             }
@@ -80,33 +121,19 @@ module.exports.create_restaurant = async (req, res) => {
         await Restaurant.createRestaurant(new Restaurant(req.body)).then(async (result) => {
             await User.updateUser(req.body.user_id, { role_id: 2 }).then(async (data) => {
                 await Restaurant.getRestaurantById(result.insertId).then((restaurant) => {
-                    var requests = [{ restaurant }]
-                    res.send({
-                        status: 200,
-                        success: true,
-                        message: "Restaurant Created Successfuly.",
-                        data: { requests }
-                    })
+                    if (restaurant) {
+                        return response(res, 200, true, "Restaurant Created Successfully.", restaurant[0])
+                    } else {
+                        return response(res, 200, false, "Data not Found.")
+                    }
                 }).catch((error) => {
-                    res.send({
-                        success: false,
-                        error,
-                        message: 'error level 3'
-                    })
+                    return response(res, 200, false, "Error.", error)
                 })
             }).catch((error) => {
-                res.send({
-                    success: false,
-                    error,
-                    message: 'error level 2'
-                })
+                return response(res, 200, false, "Error.", error)
             })
         }).catch((error) => {
-            res.send({
-                success: false,
-                error,
-                message: 'error level 1'
-            })
+            return response(res, 200, false, "Error.", error)
         })
     })
 }
@@ -117,14 +144,16 @@ module.exports.update_restaurant = async (req, res) => {
 
     await Restaurant.updateRestaurant(id, req.body).then(async (result) => {
         await Restaurant.getRestaurantById(id).then((restaurant) => {
-            var requests = [{ restaurant }]
-            res.send({
-                status: 200,
-                success: true,
-                message: "Restaurant Updated Successfuly.",
-                data: { requests }
-            })
+            if (restaurant) {
+                return response(res, 200, true, "Restaurant Updated Successfully.", restaurant[0])
+            } else {
+                return response(res, 200, false, "Data not Found.")
+            }
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
         })
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
     })
 }
 
@@ -137,28 +166,29 @@ module.exports.update_restaurant_logo = async (req, res) => {
         }
         await Restaurant.updateRestaurant(id, { logo: req.file.filename }).then(async (result) => {
             await Restaurant.getRestaurantById(id).then((restaurant) => {
-                var requests = [{ restaurant }]
-                res.send({
-                    status: 200,
-                    success: true,
-                    message: "Restaurant Logo Updated Successfuly.",
-                    data: { requests }
-                })
+                if (restaurant) {
+                    return response(res, 200, true, "Restaurant Logo Updated Successfully.", restaurant[0])
+                } else {
+                    return response(res, 200, false, "Data not Found.")
+                }
+            }).catch((error) => {
+                return response(res, 200, false, "Error.", error)
             })
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
         })
     })
 }
 
-
-//working as intended
 module.exports.delete_restaurant = async (req, res) => {
     const { id } = req.params
     await Restaurant.deleteRestaurant(id).then((result) => {
-        res.send({
-            status: 200,
-            success: true,
-            message: "Restaurant Removed Successfuly.",
-            data: {}
-        })
+        if (result.affectedRows !== 0) {
+            return response(res, 200, true, "Restaurant Deleted Successfully.")
+        } else {
+            return response(res, 200, false, "Deleting Restaurant Failed")
+        }
+    }).catch((error) => {
+        return response(res, 200, false, "Error.", error)
     })
 }

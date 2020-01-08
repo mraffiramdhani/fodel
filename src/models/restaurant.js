@@ -14,9 +14,47 @@ var Restaurant = function Restaurant(data) {
     this.updated_at = new Date()
 }
 
-Restaurant.getAllRestaurant = () => {
+Restaurant.getRestaurantCount = (search, sort) => {
+    var sql = 'select count(*) as rCount from restaurants'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
     return new Promise((resolve, reject) => {
-        conn.query('select * from restaurants', (err, res, fields) => {
+        conn.query(sql, (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Restaurant.getAllRestaurant = (search, sort, limit) => {
+    var sql = 'select * from restaurants'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(key + ` like '%` + search[key] + `%'`)
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
+    if (limit !== '') {
+        sql += ' limit ' + limit
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })
