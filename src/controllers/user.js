@@ -11,11 +11,24 @@ const jwt = require('jsonwebtoken'),
 module.exports.list_all_users = async (req, res) => {
     const { id } = req.auth
     const { search, sort } = req.query
+    var pageLinks = process.env.APP_URI.concat('user?')
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(`search[${key}]=${search[key]}`)
+        })
+        pageLinks += arr.join('&') + '&'
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            pageLinks += `sort[${key}]=${sort[key]}&`
+        })
+    }
     var numRows
     var numPerPage = parseInt(req.query.perPage, 10) || 10
-    var page = parseInt(req.query.page) || 0
+    var page = parseInt(req.query.page) || 1
     var numPages
-    var skip = page * numPerPage
+    var skip = (page - 1) * numPerPage
     await User.getUserCount(id, search, sort).then((count) => {
         numRows = count[0].uCount
         numPages = Math.ceil(numRows / numPerPage)
@@ -33,12 +46,14 @@ module.exports.list_all_users = async (req, res) => {
                 var result = {
                     users
                 }
-                if (page < numPages) {
+                if (page <= numPages) {
                     result.pagination = {
-                        current: page + 1,
+                        current: page,
                         perPage: numPerPage,
-                        prev: page + 1 > 1 ? page : undefined,
-                        next: page + 1 < numPages - 1 ? page + 2 : undefined
+                        prev: page > 1 ? page - 1 : undefined,
+                        next: page < numPages ? page + 1 : undefined,
+                        prevLink: page > 1 ? encodeURI(pageLinks.concat(`page=${page - 1}&perPage=${numPerPage}`)) : undefined,
+                        nextLink: page < numPages ? encodeURI(pageLinks.concat(`page=${page + 1}&perPage=${numPerPage}`)) : undefined
                     }
                 } else result.pagination = {
                     err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
