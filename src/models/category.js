@@ -9,18 +9,18 @@ Category.getAllCategories = () => {
     return new Promise((resolve, reject) => {
         conn.query('select * from categories', (err, res, fields) => {
             if (err) reject(err)
-            resolve({ requests: res })
+            resolve(res)
         })
     })
 }
 
 Category.getCategoryById = (id) => {
-	return new Promise((resolve, reject) => {
-		conn.query('select * from categories where id = ?', [id], (err,res) => {
-			if(err) reject(err)
-			resolve(res)
-		})
-	})
+    return new Promise((resolve, reject) => {
+        conn.query('select * from categories where id = ?', [id], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
 }
 
 Category.createCategory = (newCat) => {
