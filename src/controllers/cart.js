@@ -5,7 +5,6 @@ var Cart = require('../models/cart')
 // working as intended
 module.exports.list_user_cart = async (req, res) => {
     const { id } = req.auth
-    console.log(id)
 
     await Cart.getCartByUserId(id)
         .then((data) => {
