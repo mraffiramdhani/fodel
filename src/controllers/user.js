@@ -11,24 +11,26 @@ const jwt = require('jsonwebtoken'),
 module.exports.list_all_users = async (req, res) => {
     const { id } = req.auth
     const { search, sort } = req.query
-    var pageLinks = process.env.APP_URI.concat('user?')
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    var pageLinks = ''
+    var redisKey = `index_user_page:${page}_limit:${limit}`
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
             arr.push(`search[${key}]=${search[key]}`)
         })
         pageLinks += arr.join('&') + '&'
+        redisKey += arr.join('_')
     }
     if (sort) {
         Object.keys(sort).map((key, index) => {
             pageLinks += `sort[${key}]=${sort[key]}&`
         })
     }
-    var numRows
-    var numPerPage = parseInt(req.query.perPage, 10) || 10
-    var page = parseInt(req.query.page) || 1
-    var numPages
-    var skip = (page - 1) * numPerPage
     await User.getUserCount(id, search, sort).then((count) => {
         numRows = count[0].uCount
         numPages = Math.ceil(numRows / numPerPage)
@@ -36,14 +38,14 @@ module.exports.list_all_users = async (req, res) => {
         return response(res, 200, false, "Error.", error)
     })
     var limit = skip + ',' + numPerPage
-    return redis.get(`index_user_page:${page}_limit:${limit}`, async (ex, data) => {
+    return redis.get(redisKey, async (ex, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return response(res, 200, true, "Data Found - Redis Cache", resultJSON)
         } else {
             const users = await User.getAllUser(id, search, sort, limit)
             if (users) {
-		users.forEach(function(v){ delete v.password });
+                users.forEach(function (v) { delete v.password });
                 var result = {
                     users
                 }
@@ -59,7 +61,7 @@ module.exports.list_all_users = async (req, res) => {
                 } else result.pagination = {
                     err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
                 }
-                redis.setex(`index_user_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                redis.setex(redisKey, 10, JSON.stringify(result))
                 return response(res, 200, true, "Data Found - Database Query", result)
             } else {
                 return response(res, 200, false, "Data not Found")
@@ -140,18 +142,18 @@ module.exports.login_user = async (req, res) => {
                 const { id, name, role_id } = user[0]
                 const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
                 var put_token = new RevToken({ token })
-		var role = ''
-		if(role_id === 1){
-			role = "administrator"
-		}else if(role_id === 2){
-			role = "restaurant"
-		}
+                var role = ''
+                if (role_id === 1) {
+                    role = "administrator"
+                } else if (role_id === 2) {
+                    role = "restaurant"
+                }
                 RevToken.putToken(put_token, (err, result) => {
                     if (err) {
                         return response(res, 200, false, "Error.", err)
                     } else {
                         return response(res, 200, true, "User Logged In Successfully.", {
-                            token,name,role
+                            token, name, role
                         })
                     }
                 })

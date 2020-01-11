@@ -18,7 +18,13 @@ Item.getItemCount = (search, sort) => {
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
-            arr.push(key + ` like '%` + search[key] + `%'`)
+            if (key === 'name' && search[key] !== '') {
+                arr.push(key + ` like '%` + search[key] + `%'`)
+            } else if (key === 'min_price' && search[key] !== '') {
+                arr.push(`price >= ` + search[key])
+            } else if (key === 'max_price' && search[key] !== '') {
+                arr.push(`price <= ` + search[key])
+            }
         })
         sql += ' WHERE ' + arr.join(' AND ')
     }
@@ -40,7 +46,13 @@ Item.getAllItem = (search, sort, limit) => {
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
-            arr.push(key + ` like '%` + search[key] + `%'`)
+            if (key === 'name' && search[key] !== '') {
+                arr.push(key + ` like '%` + search[key] + `%'`)
+            } else if (key === 'min_price' && search[key] !== '') {
+                arr.push(`price >= ` + search[key])
+            } else if (key === 'max_price' && search[key] !== '') {
+                arr.push(`price <= ` + search[key])
+            }
         })
         sql += ' WHERE ' + arr.join(' AND ')
     }
@@ -112,9 +124,59 @@ Item.getItemById = (id) => {
     })
 }
 
-Item.getItemByRestaurant = (id) => {
+Item.getRestaurantItemCount = (id, search, sort) => {
+    var sql = 'select count(*) as iCount from items where restaurant_id=?'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            if (key === 'name' && search[key] !== '') {
+                arr.push(key + ` like '%` + search[key] + `%'`)
+            } else if (key === 'min_price' && search[key] !== '') {
+                arr.push(`price >= ` + search[key])
+            } else if (key === 'max_price' && search[key] !== '') {
+                arr.push(`price <= ` + search[key])
+            }
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
     return new Promise((resolve, reject) => {
-        conn.query('select * from items where restaurant_id=?', id, (err, res, fields) => {
+        conn.query(sql, [id], (err, res) => {
+            if (err) reject(err)
+            resolve(res)
+        })
+    })
+}
+
+Item.getRestaurantByItem = (id, search, sort, limit) => {
+    var sql = 'select * from items where restaurant_id=?'
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            if (key === 'name' && search[key] !== '') {
+                arr.push(key + ` like '%` + search[key] + `%'`)
+            } else if (key === 'min_price' && search[key] !== '') {
+                arr.push(`price >= ` + search[key])
+            } else if (key === 'max_price' && search[key] !== '') {
+                arr.push(`price <= ` + search[key])
+            }
+        })
+        sql += ' AND ' + arr.join(' AND ')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            sql += ' ORDER BY ' + key + ' ' + sort[key]
+        })
+    }
+    if (limit !== '') {
+        sql += ' limit ' + limit
+    }
+    return new Promise((resolve, reject) => {
+        conn.query(sql, [id], (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })

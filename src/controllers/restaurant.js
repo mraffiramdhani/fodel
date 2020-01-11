@@ -10,24 +10,26 @@ var Restaurant = require('../models/restaurant'),
 
 module.exports.list_all_restaurant = async (req, res) => {
     const { search, sort } = req.query
-    var pageLinks = process.env.APP_URI.concat('restaurant?')
+    var pageLinks = ''
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    var redisKey = `index_restaurant_page:${page}_limit:${limit}`
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
             arr.push(`search[${key}]=${search[key]}`)
         })
         pageLinks += arr.join('&') + '&'
+        redisKey += arr.join('_')
     }
     if (sort) {
         Object.keys(sort).map((key, index) => {
             pageLinks += `sort[${key}]=${sort[key]}&`
         })
     }
-    var numRows
-    var numPerPage = parseInt(req.query.perPage, 10) || 10
-    var page = parseInt(req.query.page) || 1
-    var numPages
-    var skip = (page - 1) * numPerPage
     await Restaurant.getRestaurantCount(search, sort).then((count) => {
         numRows = count[0].rCount
         numPages = Math.ceil(numRows / numPerPage)
@@ -35,15 +37,12 @@ module.exports.list_all_restaurant = async (req, res) => {
         return response(res, 200, false, "Error.", error)
     })
     var limit = skip + ',' + numPerPage
-    return redis.get(`index_restaurant_page:${page}_limit:${limit}`, async (err, data) => {
+    return redis.get(redisKey, async (err, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
         } else {
             const restaurants = await Restaurant.getAllRestaurant(search, sort, limit).then(async (data) => {
-                if (data.length === 0) {
-                    return response(res, 200, false, "Data not Found.")
-                } else {
                     for (var i = 0; i < data.length; i++) {
                         await User.getUserById(data[i].user_id).then((user) => {
                             data[i].owner = user[0].name
@@ -51,7 +50,6 @@ module.exports.list_all_restaurant = async (req, res) => {
                             return response(res, 200, false, "Error.", error)
                         })
                     }
-                }
                 return data
             }).catch((error) => {
                 return response(res, 200, false, "Error.", error)
@@ -72,7 +70,7 @@ module.exports.list_all_restaurant = async (req, res) => {
                 } else result.pagination = {
                     err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
                 }
-                redis.setex(`index_restaurant_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                redis.setex(redisKey, 10, JSON.stringify(result))
                 return response(res, 200, true, "Data Found - Database Query.", result)
             } else {
                 return response(res, 200, false, "Data not Found.")

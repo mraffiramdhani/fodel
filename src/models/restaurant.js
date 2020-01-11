@@ -15,13 +15,13 @@ var Restaurant = function Restaurant(data) {
 }
 
 Restaurant.getRestaurantCount = (search, sort) => {
-    var sql = 'select count(*) as rCount from restaurants'
+    var sql = 'select count(*) as rCount from restaurants '
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
             arr.push(key + ` like '%` + search[key] + `%'`)
         })
-        sql += ' AND ' + arr.join(' AND ')
+        sql +=  'where ' + arr.join(' AND ')
     }
     if (sort) {
         Object.keys(sort).map((key, index) => {
@@ -37,13 +37,13 @@ Restaurant.getRestaurantCount = (search, sort) => {
 }
 
 Restaurant.getAllRestaurant = (search, sort, limit) => {
-    var sql = 'select * from restaurants'
+    var sql = 'select * from restaurants '
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
             arr.push(key + ` like '%` + search[key] + `%'`)
         })
-        sql += ' AND ' + arr.join(' AND ')
+        sql += 'where ' + arr.join(' AND ')
     }
     if (sort) {
         Object.keys(sort).map((key, index) => {

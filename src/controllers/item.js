@@ -8,24 +8,26 @@ const Item = require('../models/item'),
 
 module.exports.list_all_item = async (req, res) => {
     const { search, sort } = req.query
-    var pageLinks = process.env.APP_URI.concat('item?')
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    var pageLinks = ''
+    var redisKey = `index_item_page:${page}_limit:${limit}`
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
             arr.push(`search[${key}]=${search[key]}`)
         })
         pageLinks += arr.join('&') + '&'
+        redisKey += arr.join('_')
     }
     if (sort) {
         Object.keys(sort).map((key, index) => {
             pageLinks += `sort[${key}]=${sort[key]}&`
         })
     }
-    var numRows
-    var numPerPage = parseInt(req.query.perPage, 10) || 10
-    var page = parseInt(req.query.page) || 1
-    var numPages
-    var skip = (page - 1) * numPerPage
     await Item.getItemCount(search, sort).then((count) => {
         numRows = count[0].iCount
         numPages = Math.ceil(numRows / numPerPage)
@@ -33,7 +35,7 @@ module.exports.list_all_item = async (req, res) => {
         return response(res, 200, false, "Error.", error)
     })
     var limit = skip + ',' + numPerPage
-    return redis.get(`index_item_page:${page}_limit:${limit}`, async (ex, data) => {
+    return redis.get(redisKey, async (ex, data) => {
         if (data) {
             const resultJSON = JSON.parse(data);
             return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
@@ -41,6 +43,7 @@ module.exports.list_all_item = async (req, res) => {
             const items = await Item.getAllItem(search, sort, limit)
             if (items) {
                 var result = {
+		    count: numRows,
                     items
                 }
                 if (page <= numPages) {
@@ -55,7 +58,7 @@ module.exports.list_all_item = async (req, res) => {
                 } else result.pagination = {
                     err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
                 }
-                redis.setex(`index_item_page:${page}_limit:${limit}`, 10, JSON.stringify(result))
+                redis.setex(redisKey, 10, JSON.stringify(result))
                 return response(res, 200, true, "Data Found - Database Query.", result)
             } else {
                 return response(res, 200, false, "Data not Found.")
@@ -87,14 +90,64 @@ module.exports.show_item = async (req, res) => {
 
 module.exports.get_item_by_restaurant = async (req, res) => {
     const { id } = req.auth
-    await Restaurant.getRestaurantByUser(id).then(async (data) => {
-        await Item.getItemByRestaurant(data[0].id).then((data) => {
-            return res.json({
-                status: 200,
-                success: true,
-                message: "Data Found",
-                data
-            })
+    const { search, sort } = req.query
+    var numRows
+    var numPerPage = parseInt(req.query.perPage, 10) || 10
+    var page = parseInt(req.query.page) || 1
+    var numPages
+    var skip = (page - 1) * numPerPage
+    var pageLinks = ''
+    if (search) {
+        var arr = []
+        Object.keys(search).map((key, index) => {
+            arr.push(`search[${key}]=${search[key]}`)
+        })
+        pageLinks += arr.join('&') + '&'
+        redisKey += arr.join('_')
+    }
+    if (sort) {
+        Object.keys(sort).map((key, index) => {
+            pageLinks += `sort[${key}]=${sort[key]}&`
+        })
+    }
+    await Restaurant.getRestaurantByUser(id).then(async (rest_id) => {
+        await Item.getRestaurantItemCount(rest_id[0].id, search, sort).then((count) => {
+            numRows = count[0].iCount
+            numPages = Math.ceil(numRows / numPerPage)
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
+        })
+        var limit = skip + ',' + numPerPage
+        var redisKey = `resto_item_page:${page}_limit:${limit}`
+        return redis.get(redisKey, async (ex, data) => {
+            if (data) {
+                const resultJSON = JSON.parse(data);
+                return response(res, 200, true, "Data Found - Redis Cache.", resultJSON)
+            } else {
+                const items = await Item.getRestaurantByItem(rest_id[0].id, search, sort, limit)
+                if (items) {
+                    var result = {
+			count: numRows,
+                        items
+                    }
+                    if (page <= numPages) {
+                        result.pagination = {
+                            current: page,
+                            perPage: numPerPage,
+                            prev: page > 1 ? page - 1 : undefined,
+                            next: page < numPages ? page + 1 : undefined,
+                            prevLink: page > 1 ? encodeURI(pageLinks.concat(`page=${page - 1}&perPage=${numPerPage}`)) : undefined,
+                            nextLink: page < numPages ? encodeURI(pageLinks.concat(`page=${page + 1}&perPage=${numPerPage}`)) : undefined
+                        }
+                    } else result.pagination = {
+                        err: 'queried page ' + page + ' is >= to maximum page number ' + numPages
+                    }
+                    redis.setex(redisKey, 10, JSON.stringify(result))
+                    return response(res, 200, true, "Data Found - Database Query.", result)
+                } else {
+                    return response(res, 200, false, "Data not Found.")
+                }
+            }
         })
     })
 }
@@ -139,6 +192,7 @@ module.exports.create_item_by_admin = async (req, res) => {
             images.push(files[i])
         }
         req.body.image = images
+        console.log(req.body)
         await Item.createItem(new Item(req.body)).then((data) => {
             if (data.effectedRows !== 0) {
                 return response(res, 200, true, "Item Created Successfully.", data[0])
