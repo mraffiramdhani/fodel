@@ -59,10 +59,13 @@ module.exports = (app) => {
         .get(Items.list_all_item)
         .post(auth, hasRole('restaurant'), Items.create_item)
 
+    app.route('/item/admin')
+        .post(auth, hasRole('administrator'), Items.create_item_by_admin)
+
     app.route('/item/:id')
         .get(Items.show_item)
-        .patch(auth, hasRole('restaurant'), Items.update_item)
-        .delete(auth, hasRole('restaurant'), Items.delete_item)
+        .patch(auth, hasRole(['administrator', 'restaurant']), Items.update_item)
+        .delete(auth, hasRole(['administrator', 'restaurant']), Items.delete_item)
 
     app.route('/restaurant-item')
         .get(auth, hasRole('restaurant'), Items.get_item_by_restaurant)

@@ -43,6 +43,7 @@ module.exports.list_all_users = async (req, res) => {
         } else {
             const users = await User.getAllUser(id, search, sort, limit)
             if (users) {
+		users.forEach(function(v){ delete v.password });
                 var result = {
                     users
                 }
@@ -71,7 +72,7 @@ module.exports.get_user_by_id = async (req, res) => {
     const { id } = req.params
     const data = await User.getUserById(id)
     if (data) {
-        return response(res, 200, true, "Data Found", data)
+        return response(res, 200, true, "Data Found", data[0])
     } else {
         return response(res, 200, false, "Data not Found")
     }
@@ -139,12 +140,18 @@ module.exports.login_user = async (req, res) => {
                 const { id, name, role_id } = user[0]
                 const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
                 var put_token = new RevToken({ token })
+		var role = ''
+		if(role_id === 1){
+			role = "administrator"
+		}else if(role_id === 2){
+			role = "restaurant"
+		}
                 RevToken.putToken(put_token, (err, result) => {
                     if (err) {
                         return response(res, 200, false, "Error.", err)
                     } else {
                         return response(res, 200, true, "User Logged In Successfully.", {
-                            token
+                            token,name,role
                         })
                     }
                 })
@@ -165,12 +172,12 @@ module.exports.create_user = async (req, res) => {
     } else {
         await User.createUser(new_user).then(async (result) => {
             await User.getUserById(result.insertId).then((data) => {
-                return response(res, 200, true, "User Created Successfully.", data)
+                return response(res, 200, true, "User Created Successfully.", data[0])
             }).catch((error) => {
                 return response(res, 200, false, "Error.", error)
             })
         }).catch((error) => {
-            return response(res, 200, false, "Error.", err)
+            return response(res, 200, false, "Error.", error)
         })
     }
 }
@@ -187,7 +194,7 @@ module.exports.update_user = async (req, res) => {
                 return response(res, 200, false, "Data not Found.")
             } else {
                 await User.getUserById(id).then((data) => {
-                    return response(res, 200, true, "User Updated Successfully.", data)
+                    return response(res, 200, true, "User Updated Successfully.", data[0])
                 }).catch((error) => {
                     return response(res, 200, false, "Error.", error)
                 })

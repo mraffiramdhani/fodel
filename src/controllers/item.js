@@ -127,10 +127,32 @@ module.exports.create_item = async (req, res) => {
     })
 }
 
+module.exports.create_item_by_admin = async (req, res) => {
+    multer.uploadImages(req, res, async () => {
+        if (req.fileValidationError) {
+            return res.end(req.fileValidationError)
+        }
+
+        const images = []
+        const files = req.files
+        for (var i = 0; i < files.length; i++) {
+            images.push(files[i])
+        }
+        req.body.image = images
+        await Item.createItem(new Item(req.body)).then((data) => {
+            if (data.effectedRows !== 0) {
+                return response(res, 200, true, "Item Created Successfully.", data[0])
+            } else {
+                return response(res, 200, false, "Creating Item Failed.", data)
+            }
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
+        })
+    })
+}
+
 module.exports.update_item = async (req, res) => {
     const { id } = req.params
-    const restaurant = await Restaurant.getRestaurantByUser(req.auth.id)
-    req.body.restaurant_id = restaurant[0].id
     await Item.updateItem(id, new Item(req.body)).then((data) => {
         if (data.affectedRows !== 0) {
             return response(res, 200, true, "Item Updated Successfully.", data[0])
@@ -174,8 +196,7 @@ module.exports.update_item_images = (req, res) => {
 module.exports.delete_item = async (req, res) => {
     const { id } = req.params
 
-    const restaurant = await Restaurant.getRestaurantByUser(req.auth.id)
-    await Item.deleteItem(id, restaurant[0].id).then((data) => {
+    await Item.deleteItem(id).then((data) => {
         return response(res, 200, true, "Item Deleted Successfully.")
     }).catch((error) => {
         return response(res, 200, false, "Error.", error)

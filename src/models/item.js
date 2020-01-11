@@ -70,6 +70,19 @@ Item.getAllItem = (search, sort, limit) => {
             })
         }
         return data
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const category = new Promise((resolve, reject) => {
+                conn.query('select c.name  from item_category ic inner join categories c on ic.category_id=c.id where ic.item_id=?', [data[i].id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await category.then((result) => {
+                data[i].category = result
+            })
+        }
+        return data
     })
 }
 
@@ -238,11 +251,11 @@ Item.createItem = async (newItem) => {
 }
 
 Item.updateItem = (id, data) => {
-    const { name, price, description, restaurant_id, category } = data
+    const { name, price, description, category } = data
 
     return new Promise((resolve, reject) => {
-        conn.query('update items set name=?, price=?, description=? where id=? and restaurant_id=?',
-            [name, price, description, id, restaurant_id],
+        conn.query('update items set name=?, price=?, description=? where id=?',
+            [name, price, description, id],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)
@@ -306,10 +319,10 @@ Item.updatedItemImages = (id, data) => {
     })
 }
 
-Item.deleteItem = (id, restaurant_id) => {
+Item.deleteItem = (id) => {
     return new Promise((resolve, reject) => {
-        conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=? and restaurant_id=?',
-            [id, id, id, restaurant_id],
+        conn.query('delete from item_category where item_id=?;delete from item_images where item_id=?;delete from items where id=?',
+            [id, id, id],
             (err, res, fields) => {
                 if (err) reject(err)
                 resolve(res)
