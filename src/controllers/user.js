@@ -147,7 +147,9 @@ module.exports.login_user = async (req, res) => {
                     role = "administrator"
                 } else if (role_id === 2) {
                     role = "restaurant"
-                }
+                }else if(role_id === 3){
+		    role = "customer"
+		}
                 RevToken.putToken(put_token, (err, result) => {
                     if (err) {
                         return response(res, 200, false, "Error.", err)
