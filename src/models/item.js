@@ -14,7 +14,7 @@ var Item = function Item(item) {
 }
 
 Item.getItemCount = (search, sort) => {
-    var sql = 'select count(*) as iCount from items'
+    var sql = 'select i.* , (select ROUND(AVG(rating),1) from reviews where reviews.item_id = i.id) rating from items i inner join item_category ic on ic.item_id = i.id'
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
@@ -24,10 +24,15 @@ Item.getItemCount = (search, sort) => {
                 arr.push(`price >= ` + search[key])
             } else if (key === 'max_price' && search[key] !== '') {
                 arr.push(`price <= ` + search[key])
+            } else if (key === 'category' && search[key] !== '') {
+                arr.push(`ic.category_id in (${search[key]})`)
+            } else if (key === 'rating' && search[key] !== '') {
+                arr.push(`(select AVG(rating) from reviews where reviews.item_id = i.id) <= ${search[key]} and (select AVG(rating) from reviews where reviews.item_id = i.id) >= ${search[key] - 1}`)
             }
         })
         sql += ' WHERE ' + arr.join(' AND ')
     }
+    sql += ' GROUP BY i.id'
     if (sort) {
         Object.keys(sort).map((key, index) => {
             sql += ' ORDER BY ' + key + ' ' + sort[key]
@@ -42,7 +47,7 @@ Item.getItemCount = (search, sort) => {
 }
 
 Item.getAllItem = (search, sort, limit) => {
-    var sql = 'select * from items'
+    var sql = 'select i.*, (select ROUND(AVG(rating),1) from reviews where reviews.item_id = i.id) rating from items i inner join item_category ic on ic.item_id = i.id'
     if (search) {
         var arr = []
         Object.keys(search).map((key, index) => {
@@ -52,10 +57,15 @@ Item.getAllItem = (search, sort, limit) => {
                 arr.push(`price >= ` + search[key])
             } else if (key === 'max_price' && search[key] !== '') {
                 arr.push(`price <= ` + search[key])
+            } else if (key === 'category' && search[key] !== '') {
+                arr.push(`ic.category_id in (${search[key]})`)
+            } else if (key === 'rating' && search[key] !== '') {
+                arr.push(`(select AVG(rating) from reviews where reviews.item_id = i.id) <= ${search[key]} and (select AVG(rating) from reviews where reviews.item_id = i.id) >= ${search[key] - 1}`)
             }
         })
         sql += ' WHERE ' + arr.join(' AND ')
     }
+    sql += ' GROUP BY i.id'
     if (sort) {
         Object.keys(sort).map((key, index) => {
             sql += ' ORDER BY ' + key + ' ' + sort[key]
@@ -100,7 +110,7 @@ Item.getAllItem = (search, sort, limit) => {
 
 Item.getItemById = (id) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from items where id=?', id, (err, res, fields) => {
+        conn.query('select i.*, (select ROUND(AVG(rating),1) from reviews where reviews.item_id = i.id) rating from items i where id=?', id, (err, res, fields) => {
             if (err) reject(err)
             resolve(res)
         })

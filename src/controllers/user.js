@@ -95,7 +95,7 @@ module.exports.register_user = async (req, res) => {
                 if (err) {
                     return response(res, 200, false, "Error", err)
                 } else {
-                    return response(res, 200, true, "User Created Successfully.", { token })
+                    return response(res, 200, true, "User Created Successfully.", { token, name, username })
                 }
             })
         }).catch((error) => {
@@ -155,7 +155,7 @@ module.exports.login_user = async (req, res) => {
                         return response(res, 200, false, "Error.", err)
                     } else {
                         return response(res, 200, true, "User Logged In Successfully.", {
-                            token, name, role
+                            token, name, role, username
                         })
                     }
                 })

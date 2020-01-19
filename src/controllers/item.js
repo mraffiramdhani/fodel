@@ -29,7 +29,7 @@ module.exports.list_all_item = async (req, res) => {
         })
     }
     await Item.getItemCount(search, sort).then((count) => {
-        numRows = count[0].iCount
+        numRows = count.length
         numPages = Math.ceil(numRows / numPerPage)
     }).catch((error) => {
         return response(res, 200, false, "Error.", error)
