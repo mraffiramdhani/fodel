@@ -8,7 +8,7 @@ module.exports.list_user_cart = async (req, res) => {
 
     await Cart.getCartByUserId(id)
         .then((data) => {
-            if (data.requests.length > 0) {
+            if (data.length > 0) {
                 res.send({
                     status: 200,
                     success: true,

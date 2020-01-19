@@ -12,20 +12,20 @@ var Cart = function Cart(cart) {
 
 Cart.getCartByUserId = (userId) => {
     return new Promise((resolve, reject) => {
-        conn.query('select * from carts where user_id=?', userId, (err, requests, fields) => {
+        conn.query('select * from carts where user_id=?', userId, (err, res, fields) => {
             if (err) reject(err)
-            resolve({ requests })
+            resolve(res)
         })
     }).then(async (data) => {
-        for (var i = 0; i < data.requests.length; i++) {
+        for (var i = 0; i < data.length; i++) {
             const image = new Promise((resolve, reject) => {
-                conn.query('select filename from item_images where item_id=?', [data.requests[i].item_id], (err, res) => {
+                conn.query('select filename from item_images where item_id=?', [data[i].item_id], (err, res) => {
                     if (err) reject(err)
                     resolve(res)
                 })
             })
             await image.then((result) => {
-                data.requests[i].images = result
+                data[i].images = result
             })
         }
         return data

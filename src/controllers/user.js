@@ -140,7 +140,7 @@ module.exports.login_user = async (req, res) => {
         if (user.length > 0) {
             if (bcrypt.compareSync(password, user[0].password)) {
                 const { id, name, role_id } = user[0]
-                const token = jwt.sign({ id, name, username, role_id }, process.env.APP_KEY)
+                const token = jwt.sign({ id: user[0].id, name, username, role_id }, process.env.APP_KEY)
                 var put_token = new RevToken({ token })
                 var role = ''
                 if (role_id === 1) {

@@ -131,6 +131,39 @@ Item.getItemById = (id) => {
                 resolve(item)
             })
         })
+    }).then((item) => {
+        return new Promise((resolve, reject) => {
+            conn.query('select * from reviews where item_id=?', [id], (err, reviews) => {
+                if (err) reject(err)
+                item[0].reviews = reviews
+                resolve(item)
+            })
+        })
+    }).then((item) => {
+        var arr = []
+        item[0].categories.map((v, i) => {
+            arr.push(v.id)
+        })
+        return new Promise((resolve, reject) => {
+            conn.query('select i.id, i.name, i.price, (select ROUND(AVG(rating),1) from reviews where reviews.item_id = i.id) rating from items i inner join item_category ic on ic.item_id = i.id where ic.category_id in (?) and i.id != ? limit 5', [arr.join(), item[0].id], (err, res) => {
+                if (err) reject(err)
+                item[0].suggest = res
+                resolve(item)
+            })
+        }).then(async (item) => {
+            for (var i = 0; i < item[0].suggest.length; i++) {
+                const image = new Promise((resolve, reject) => {
+                    conn.query('select filename from item_images where item_id=?', [item[0].suggest[i].id], (err, res) => {
+                        if (err) reject(err)
+                        resolve(res)
+                    })
+                })
+                await image.then((result) => {
+                    item[0].suggest[i].images = result
+                })
+            }
+            return item
+        })
     })
 }
 
