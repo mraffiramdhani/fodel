@@ -22,10 +22,11 @@ module.exports = (app) => {
     app.route('/user')
         .get(auth, hasRole('administrator'), Users.list_all_users)
         .post(auth, hasRole('administrator'), Users.create_user)
+        .patch(auth, hasRole('customer'), Users.update_profile)
 
     app.route('/user/:id')
         .get(auth, hasRole('administrator'), Users.get_user_by_id)
-        .patch(auth, hasRole(['customer', 'administrator']), Users.update_user)
+        .patch(auth, hasRole('administrator'), Users.update_user)
         .delete(auth, hasRole('administrator'), Users.delete_user)
 
     app.route('/user/review')

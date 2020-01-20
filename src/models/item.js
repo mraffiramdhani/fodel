@@ -138,6 +138,19 @@ Item.getItemById = (id) => {
                 item[0].reviews = reviews
                 resolve(item)
             })
+        }).then(async (item) => {
+            for (var i = 0; i < item[0].reviews.length; i++) {
+                const reviewUser = new Promise((resolve, reject) => {
+                    conn.query('select name from users where id = ?', [item[0].reviews[i].user_id], (err, name) => {
+                        if (err) reject(err)
+                        resolve(name)
+                    })
+                })
+                await reviewUser.then((name) => {
+                    item[0].reviews[i].user = name[0].name
+                })
+            }
+            return item
         })
     }).then((item) => {
         var arr = []

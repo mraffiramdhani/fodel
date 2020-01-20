@@ -147,9 +147,9 @@ module.exports.login_user = async (req, res) => {
                     role = "administrator"
                 } else if (role_id === 2) {
                     role = "restaurant"
-                }else if(role_id === 3){
-		    role = "customer"
-		}
+                } else if (role_id === 3) {
+                    role = "customer"
+                }
                 RevToken.putToken(put_token, (err, result) => {
                     if (err) {
                         return response(res, 200, false, "Error.", err)
@@ -188,7 +188,7 @@ module.exports.create_user = async (req, res) => {
 
 module.exports.update_user = async (req, res) => {
     var new_user = new User(req.body)
-    const { id } = req.params
+    const id = req.params.id || req.auth.id
 
     if (!new_user.name || !new_user.username || !new_user.role_id) {
         return response(res, 200, false, "Please provide a valid data.")
@@ -208,6 +208,30 @@ module.exports.update_user = async (req, res) => {
         })
     }
 }
+
+module.exports.update_profile = async (req, res) => {
+    var new_user = new User(req.body)
+    const id = req.auth.id
+
+    if (!new_user.name || !new_user.username) {
+        return response(res, 200, false, "Please provide a valid data.")
+    } else {
+        await User.updateUser(id, new_user).then(async (data) => {
+            if (data.affectedRows === 0) {
+                return response(res, 200, false, "Data not Found.")
+            } else {
+                await User.getUserById(id).then((data) => {
+                    return response(res, 200, true, "User Updated Successfully.", { name: data[0].name, username: data[0].username })
+                }).catch((error) => {
+                    return response(res, 200, false, "Error.", error)
+                })
+            }
+        }).catch((error) => {
+            return response(res, 200, false, "Error.", error)
+        })
+    }
+}
+
 
 module.exports.delete_user = async (req, res) => {
     const { id } = req.params

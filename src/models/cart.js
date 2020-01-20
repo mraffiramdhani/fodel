@@ -29,6 +29,19 @@ Cart.getCartByUserId = (userId) => {
             })
         }
         return data
+    }).then(async (data) => {
+        for (var i = 0; i < data.length; i++) {
+            const item = new Promise((resolve, reject) => {
+                conn.query('select * from items where id=?', [data[i].item_id], (err, res) => {
+                    if (err) reject(err)
+                    resolve(res)
+                })
+            })
+            await item.then((result) => {
+                data[i].detail = result
+            })
+        }
+        return data
     })
 }
 
