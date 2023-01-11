@@ -25,6 +25,6 @@
   },
   "devDependencies": {
     "faker": "^4.1.0",
-    "knex": "^0.20.4"
+    "knex": "^2.4.0"
   }
 }
